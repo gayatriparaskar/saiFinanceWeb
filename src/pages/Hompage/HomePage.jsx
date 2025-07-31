@@ -13,9 +13,20 @@ import {
   FormLabel,
   Input,
 } from "@chakra-ui/react";
+import { motion } from "framer-motion";
+import {
+  FaMoneyBillWave,
+  FaExclamationTriangle,
+  FaCalendarAlt,
+  FaPhone,
+  FaRupeeSign,
+  FaChartLine,
+  FaWallet,
+  FaUser,
+  FaCreditCard
+} from "react-icons/fa";
 import axios from "../../axios";
 import UserLogo from "../../Images/60111.jpg";
-import bgImage from "../../Images/homepagebg.jpg";
 import dayjs from "dayjs";
 
 const HomePage = () => {
@@ -109,164 +120,424 @@ const HomePage = () => {
     }
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.5 }
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0
+    }).format(amount || 0);
+  };
+
   return (
-    <div
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: "cover",
-      }}
-      className="h-screen opacity-90 flex flex-col items-center justify-center space-y-6"
+    <motion.div
+      className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-20 pb-8 px-4"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
     >
-      {/* Main Card Section */}
+      <div className="max-w-7xl mx-auto">
+        {/* Welcome Header */}
+        <motion.div
+          className="text-center mb-8"
+          variants={itemVariants}
+        >
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple to-crimson bg-clip-text text-transparent mb-2">
+            Welcome Back, {profile?.full_name}!
+          </h1>
+          <p className="text-gray-600 text-lg">Your financial dashboard overview</p>
+        </motion.div>
 
-      <div
-  style={{
-    backgroundImage: `url(${bgImage})`,
-    backgroundSize: "cover",
-  }}
-  className="h-screen opacity-90 flex flex-col items-center justify-center space-y-2"
->
-  {/* Main Card Section */}
-  <div className="bg-white/30 h-auto md:h-[70%] w-11/12 md:w-3/4 lg:w-1/2 mt-24 rounded-xl shadow-lg border border-gray-200 p-6">
-    <div className="flex flex-col space-y-4">
-      <div className="flex flex-col items-center justify-center w-full h-full">
-        
-        <img
-          src={UserLogo}
-          alt="user"
-          className="w-4/12 h-6/12 md:w-4/12 md:h-4/12 rounded-full m-auto"
-        />
-        <p className="mt-6 font-bold text-xl m-auto text-center">
-          {profile?.full_name}
-        </p>
-      </div>
+        {/* Stats Cards Grid */}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          variants={itemVariants}
+        >
+          {/* Loan Amount Card */}
+          <motion.div
+            className="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-blue-500 hover:shadow-2xl transition-all duration-300"
+            variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.02 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Total Loan</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {formatCurrency(profile?.active_loan_id?.loan_amount)}
+                </p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FaWallet className="text-blue-600 text-xl" />
+              </div>
+            </div>
+          </motion.div>
 
-      <div className="border-gray-300 border-spacing-2">
-        <div className="text-xl space-y-2 p-6">
-          <p className="flex justify-between text-start ">
-            <strong>Date:</strong> <span className="font-semibold">{dayjs(profile?.created_on).format("D MMM, YYYY h:mm A")}</span>
-          </p>
-          <p className="flex justify-between text-start ">
-            <strong>Mobile:</strong> <span className="font-semibold">{profile?.phone_number}</span>
-          </p>
-          <p className="flex justify-between text-start ">
-            <strong>Loan:</strong> <span className="font-semibold">₹{profile?.active_loan_id?.loan_amount}</span> 
-          </p>
-          <p className="flex justify-between text-start ">
-            <strong>EMI:</strong> <span className="font-semibold">₹{profile?.active_loan_id?.emi_day}</span> 
-          </p>
-          <p className="flex justify-between text-start ">
-            <strong>Total Paid:</strong> <span className="font-semibold"> ₹{profile?.active_loan_id?.total_amount}</span>
-          </p>
-          <p className="flex justify-between text-start ">
-            <strong>Total Due:</strong> <span className="font-semibold">₹{profile?.active_loan_id?.total_due_amount}</span> 
-          </p>
-          <p className="flex justify-between text-start ">
-            <strong>Penalty:</strong> <span className="font-semibold"> ₹{profile?.active_loan_id?.total_penalty_amount}</span>
-          </p>
+          {/* EMI Card */}
+          <motion.div
+            className="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-green-500 hover:shadow-2xl transition-all duration-300"
+            variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.02 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Monthly EMI</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {formatCurrency(profile?.active_loan_id?.emi_day)}
+                </p>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <FaCreditCard className="text-green-600 text-xl" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Total Due Card */}
+          <motion.div
+            className="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-orange-500 hover:shadow-2xl transition-all duration-300"
+            variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.02 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Amount Due</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {formatCurrency(profile?.active_loan_id?.total_due_amount)}
+                </p>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-full">
+                <FaChartLine className="text-orange-600 text-xl" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Penalty Card */}
+          <motion.div
+            className="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-red-500 hover:shadow-2xl transition-all duration-300"
+            variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.02 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Penalty</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {formatCurrency(profile?.active_loan_id?.total_penalty_amount)}
+                </p>
+              </div>
+              <div className="bg-red-100 p-3 rounded-full">
+                <FaExclamationTriangle className="text-red-600 text-xl" />
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Card */}
+          <motion.div
+            className="lg:col-span-1"
+            variants={itemVariants}
+          >
+            <motion.div
+              className="bg-white rounded-2xl shadow-xl p-8 text-center h-full"
+              variants={cardVariants}
+              whileHover={{ scale: 1.02 }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <img
+                  src={UserLogo}
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-purple shadow-lg"
+                />
+              </motion.div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">{profile?.full_name}</h3>
+              <div className="space-y-3 text-left">
+                <div className="flex items-center space-x-3 text-gray-600">
+                  <FaPhone className="text-purple" />
+                  <span className="font-medium">{profile?.phone_number}</span>
+                </div>
+                <div className="flex items-center space-x-3 text-gray-600">
+                  <FaCalendarAlt className="text-purple" />
+                  <span className="font-medium">
+                    {dayjs(profile?.created_on).format("D MMM, YYYY")}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-3 text-gray-600">
+                  <FaUser className="text-purple" />
+                  <span className="font-medium">Customer ID: {profile?.id}</span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Payment Summary & Actions */}
+          <motion.div
+            className="lg:col-span-2 space-y-6"
+            variants={itemVariants}
+          >
+            {/* Payment Summary */}
+            <motion.div
+              className="bg-white rounded-2xl shadow-xl p-8"
+              variants={cardVariants}
+            >
+              <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <FaRupeeSign className="text-purple mr-3" />
+                Payment Summary
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center p-4 bg-green-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Total Paid</span>
+                    <span className="font-bold text-green-600 text-lg">
+                      {formatCurrency(profile?.active_loan_id?.total_amount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-blue-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Loan Amount</span>
+                    <span className="font-bold text-blue-600 text-lg">
+                      {formatCurrency(profile?.active_loan_id?.loan_amount)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center p-4 bg-orange-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Amount Due</span>
+                    <span className="font-bold text-orange-600 text-lg">
+                      {formatCurrency(profile?.active_loan_id?.total_due_amount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-red-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Penalty</span>
+                    <span className="font-bold text-red-600 text-lg">
+                      {formatCurrency(profile?.active_loan_id?.total_penalty_amount)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Action Buttons */}
+            <motion.div
+              className="bg-white rounded-2xl shadow-xl p-8"
+              variants={cardVariants}
+            >
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">Quick Actions</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <motion.button
+                  onClick={openAmountModal}
+                  className="bg-gradient-to-r from-green-500 to-green-600 text-green-50 p-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-3"
+                  whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(34, 197, 94, 0.3)" }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FaMoneyBillWave className="text-xl text-green-100" />
+                  <span className="text-green-50 font-bold">Add Payment</span>
+                </motion.button>
+
+                <motion.button
+                  onClick={openPenaltyModal}
+                  className="bg-gradient-to-r from-red-500 to-red-600 text-red-50 p-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-3"
+                  whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(239, 68, 68, 0.3)" }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FaExclamationTriangle className="text-xl text-red-100" />
+                  <span className="text-red-50 font-bold">Add Penalty</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
-    </div>
-    
-    {/* Action Buttons */}
-    <div className="flex flex-col sm:flex-row justify-center sm:justify-around mx-auto w-full gap-4">
-      {/* Add Amount Button */}
-      <button
-        onClick={openAmountModal}
-        className="bg-green-500 text-white py-5 w-full sm:w-[45%] text-xl rounded-lg"
-      >
-        Add Amount
-      </button>
-
-      {/* Add Penalty Button */}
-      <button
-        onClick={openPenaltyModal}
-        className="bg-red-500 text-white py-5 w-full sm:w-[45%] text-xl rounded-lg"
-      >
-        Add Penalty
-      </button>
-    </div>
-  </div>
-</div>
 
 
-      {/* Modal for Amount Details */}
+      {/* Enhanced Modal for Amount Details */}
       <Modal
         isOpen={isAmountModalOpen}
         onClose={() => setIsAmountModalOpen(false)}
+        size="md"
       >
-        <ModalOverlay />
-        <ModalContent margin="auto" w={{ base: "90%", sm: "50%" }}>
-          <ModalHeader>Add Amount Details</ModalHeader>
+        <ModalOverlay backdropFilter="blur(10px)" />
+        <ModalContent
+          margin="auto"
+          w={{ base: "90%", sm: "400px" }}
+          borderRadius="2xl"
+          boxShadow="2xl"
+        >
+          <ModalHeader
+            fontSize="2xl"
+            fontWeight="bold"
+            color="gray.800"
+            borderTopRadius="2xl"
+            bg="gradient-to-r from-green-50 to-emerald-50"
+            display="flex"
+            alignItems="center"
+            gap={3}
+          >
+            <FaMoneyBillWave color="#22c55e" />
+            Add Payment Amount
+          </ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <FormControl id="amount" isRequired>
-              <FormLabel>Amount</FormLabel>
+          <ModalBody p={8}>
+            <FormControl id="amount" isRequired mb={6}>
+              <FormLabel fontSize="lg" fontWeight="semibold" color="gray.700">
+                Payment Amount
+              </FormLabel>
               <Input
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Enter Amount"
+                placeholder="Enter payment amount"
+                size="lg"
+                borderRadius="xl"
+                borderColor="gray.300"
+                _focus={{ borderColor: "green.500", boxShadow: "0 0 0 3px rgba(34, 197, 94, 0.1)" }}
               />
             </FormControl>
             <FormControl id="pin" isRequired>
-              <FormLabel>Officer PIN</FormLabel>
+              <FormLabel fontSize="lg" fontWeight="semibold" color="gray.700">
+                Officer PIN
+              </FormLabel>
               <Input
-                type="text"
+                type="password"
                 value={collected_officer_code}
                 onChange={(e) => setPin(e.target.value)}
-                placeholder="Enter Officer PIN"
+                placeholder="Enter officer PIN"
+                size="lg"
+                borderRadius="xl"
+                borderColor="gray.300"
+                _focus={{ borderColor: "green.500", boxShadow: "0 0 0 3px rgba(34, 197, 94, 0.1)" }}
               />
             </FormControl>
           </ModalBody>
-          <ModalFooter display={"flex"} gap={"10px"}>
+          <ModalFooter display="flex" gap={4} p={8}>
             <Button
               onClick={() => setIsAmountModalOpen(false)}
-              colorScheme="red"
+              variant="outline"
+              colorScheme="gray"
+              size="lg"
+              borderRadius="xl"
+              flex={1}
             >
               Cancel
             </Button>
-            <Button onClick={handleAmountSubmit} colorScheme="green">
-              OK
+            <Button
+              onClick={handleAmountSubmit}
+              colorScheme="green"
+              size="lg"
+              borderRadius="xl"
+              flex={1}
+              bg="gradient-to-r from-green-500 to-green-600"
+              _hover={{ bg: "gradient-to-r from-green-600 to-green-700" }}
+            >
+              Submit Payment
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
-      {/* Modal for Penalty Details */}
+      {/* Enhanced Modal for Penalty Details */}
       <Modal
         isOpen={isPenaltyModalOpen}
         onClose={() => setIsPenaltyModalOpen(false)}
+        size="md"
       >
-        <ModalOverlay />
-        <ModalContent margin="auto" w={{ base: "90%", sm: "50%" }}>
-          <ModalHeader>Add Penalty Details </ModalHeader>
+        <ModalOverlay backdropFilter="blur(10px)" />
+        <ModalContent
+          margin="auto"
+          w={{ base: "90%", sm: "400px" }}
+          borderRadius="2xl"
+          boxShadow="2xl"
+        >
+          <ModalHeader
+            fontSize="2xl"
+            fontWeight="bold"
+            color="gray.800"
+            borderTopRadius="2xl"
+            bg="gradient-to-r from-red-50 to-rose-50"
+            display="flex"
+            alignItems="center"
+            gap={3}
+          >
+            <FaExclamationTriangle color="#ef4444" />
+            Add Penalty Charge
+          </ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <ModalBody p={8}>
             <FormControl id="pin" isRequired>
-              <FormLabel>Officer PIN</FormLabel>
+              <FormLabel fontSize="lg" fontWeight="semibold" color="gray.700">
+                Officer PIN
+              </FormLabel>
               <Input
-                type="text"
+                type="password"
                 value={collected_officer_code}
                 onChange={(e) => setPin(e.target.value)}
-                placeholder="Enter Officer PIN"
+                placeholder="Enter officer PIN"
+                size="lg"
+                borderRadius="xl"
+                borderColor="gray.300"
+                _focus={{ borderColor: "red.500", boxShadow: "0 0 0 3px rgba(239, 68, 68, 0.1)" }}
               />
             </FormControl>
           </ModalBody>
-          <ModalFooter display={"flex"} gap={"10px"}>
+          <ModalFooter display="flex" gap={4} p={8}>
             <Button
               onClick={() => setIsPenaltyModalOpen(false)}
-              colorScheme="red"
+              variant="outline"
+              colorScheme="gray"
+              size="lg"
+              borderRadius="xl"
+              flex={1}
             >
               Cancel
             </Button>
-            <Button onClick={handlePenaltySubmit} colorScheme="green">
-              OK
+            <Button
+              onClick={handlePenaltySubmit}
+              colorScheme="red"
+              size="lg"
+              borderRadius="xl"
+              flex={1}
+              bg="gradient-to-r from-red-500 to-red-600"
+              _hover={{ bg: "gradient-to-r from-red-600 to-red-700" }}
+            >
+              Add Penalty
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </div>
+    </motion.div>
   );
 };
 
