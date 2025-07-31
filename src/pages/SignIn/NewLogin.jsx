@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "../../axios";
+import { motion } from "framer-motion";
 
 import LogoDark from "../../Images/Sai-removebg-preview.png";
 import HomeImage from "../../Images/secure-login-concept-illustration.png";
