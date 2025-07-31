@@ -359,22 +359,22 @@ const HomePage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <motion.button
                   onClick={openAmountModal}
-                  className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-3"
+                  className="bg-gradient-to-r from-green-500 to-green-600 text-green-50 p-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-3"
                   whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(34, 197, 94, 0.3)" }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FaMoneyBillWave className="text-xl" />
-                  <span>Add Payment</span>
+                  <FaMoneyBillWave className="text-xl text-green-100" />
+                  <span className="text-green-50 font-bold">Add Payment</span>
                 </motion.button>
 
                 <motion.button
                   onClick={openPenaltyModal}
-                  className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-3"
+                  className="bg-gradient-to-r from-red-500 to-red-600 text-red-50 p-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-3"
                   whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(239, 68, 68, 0.3)" }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FaExclamationTriangle className="text-xl" />
-                  <span>Add Penalty</span>
+                  <FaExclamationTriangle className="text-xl text-red-100" />
+                  <span className="text-red-50 font-bold">Add Penalty</span>
                 </motion.button>
               </div>
             </motion.div>
