@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { getAccountType } from "../../../../utils/indexedDB";
 
 import CardDataStats from "../../../../componant/CardDataStats/CardDataStats";
 import ChartOne from "../../../../componant/Charts/ChartOne";

@@ -1,0 +1,121 @@
+/* Custom Cursor Styles */
+.custom-cursor {
+  pointer-events: none;
+  user-select: none;
+  mix-blend-mode: difference;
+}
+
+.cursor-trail {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Hide default cursor on interactive elements */
+button,
+a,
+input,
+textarea,
+select,
+.clickable {
+  cursor: none !important;
+}
+
+/* Smooth cursor interactions */
+* {
+  cursor: none !important;
+}
+
+/* Ensure cursor effects work on all elements */
+body, html {
+  cursor: none !important;
+}
+
+/* Custom scrollbar to match cursor theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #5a6fd8, #6a4190);
+}
+
+/* Add cursor pointer class for better control */
+.cursor-pointer {
+  position: relative;
+}
+
+.cursor-pointer::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  pointer-events: auto;
+}
+
+/* Animation keyframes for special effects */
+@keyframes cursor-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes cursor-rainbow {
+  0% { filter: hue-rotate(0deg); }
+  25% { filter: hue-rotate(90deg); }
+  50% { filter: hue-rotate(180deg); }
+  75% { filter: hue-rotate(270deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+/* Special cursor states */
+.cursor-loading {
+  animation: cursor-pulse 1.5s ease-in-out infinite;
+}
+
+.cursor-rainbow {
+  animation: cursor-rainbow 3s linear infinite;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .custom-cursor,
+  .cursor-trail {
+    display: none;
+  }
+  
+  * {
+    cursor: auto !important;
+  }
+  
+  body, html {
+    cursor: auto !important;
+  }
+}
+
+/* Ensure cursor works over all z-index levels */
+.custom-cursor {
+  z-index: 999999 !important;
+}
+
+.cursor-trail {
+  z-index: 999998 !important;
+}

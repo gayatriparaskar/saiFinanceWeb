@@ -6,7 +6,7 @@ import { Riple } from 'react-loading-indicators';
 import HomePage from "../../Hompage/HomePage";
 
 const DashRoute = () => {
-  const token = localStorage.getItem("token");
+  // const token = localStorage.getItem("token");
 
   const [loading, setLoading] = useState(false);
   const location = useLocation();

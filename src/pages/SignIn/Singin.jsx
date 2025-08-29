@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import logo from "../../Images/SVG 1 1.png"
 import loginImage from "../../Images/college entrance exam-pana 1 (1).png"
@@ -41,8 +40,6 @@ const Signin = () => {
         <div className="w-1/2   p-8 bg-bgBlue rounded-xl ">
           <div className="w-full flex flex-col ">
             <div className="self-center text-xl font-semibold flex items-center bg-transparent">
-              {/* <span className="mr-1 font-bold text-2xl text-purple">Learn2Ern</span> */}
-              {/* <Image src={logo} height={45} width={70} /> */}
               <img src={logo} alt="" className="w-48" />
             </div>
             <p className="mt-2 text-md text-white ">
