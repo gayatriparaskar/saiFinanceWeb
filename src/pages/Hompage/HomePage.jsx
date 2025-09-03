@@ -55,7 +55,8 @@ const HomePage = () => {
       account_information: "📋 Account Information",
       account_created: "📅 Account Created",
       mobile_number: "📱 Mobile Number",
-      monthly_emi: "💳 Monthly EMI",
+      allotted_officer: "👮 Allotted Officer",
+      monthly_emi: "💳 Daily EMI",
       penalty_amount: "⚠️ Penalty Amount",
       quick_overview: "⚡ Quick Overview",
       payment_progress: "Payment Progress",
@@ -106,7 +107,7 @@ const HomePage = () => {
       account_information: "खाता जानकारी",
       account_created: "खाता बनाया गया",
       mobile_number: "मोबाइल नंबर",
-      monthly_emi: "मासिक ईएमआई",
+      monthly_emi: "दैनिक ईएमआई",
       penalty_amount: "जुर्माना राशि",
       quick_overview: "त्वरित अवलोकन",
       payment_progress: "भुगतान प्रगति",
@@ -962,6 +963,12 @@ const HomePage = () => {
                     ),
                   },
                   { key: "mobile_number", value: profile?.phone_number },
+                  // Add officer information for both account types
+                  {
+                    key: "allotted_officer",
+                    value: profile?.officer_id?.name || 'Not Assigned',
+                    icon: "👮",
+                  },
                   ...(isSavingAccount
                     ? []
                     : [
