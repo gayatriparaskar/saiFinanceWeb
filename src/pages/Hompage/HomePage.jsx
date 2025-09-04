@@ -18,20 +18,17 @@ import {
   VStack,
   HStack,
   Grid,
-  GridItem,
   Progress,
-  Badge,
   Card,
   CardBody,
   Flex,
-  Icon,
 } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import axios from "../../axios";
 import { getAccountType, storeAccountType } from "../../utils/indexedDB";
-import UserLogo from "../../Images/60111.jpg";
-import bgImage from "../../Images/homepagebg.jpg";
+// import UserLogo from "../../Images/60111.jpg";
+// import bgImage from "../../Images/homepagebg.jpg";
 import dayjs from "dayjs";
 
 // Motion components
@@ -41,7 +38,7 @@ const MotionButton = motion(Button);
 
 const HomePage = () => {
   const toast = useToast();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
 
   // Translation object for HomePage
   const translations = {
@@ -161,7 +158,7 @@ const HomePage = () => {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [collected_officer_code, setPin] = useState("");
   const [profile, setProfile] = useState([]);
-  const [addPenaltyFlag, setPenalty] = useState(true);
+  const [addPenaltyFlag] = useState(true);
   const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
   const [userAccountType, setUserAccountType] = useState(null);
   const [isLoadingAccountType, setIsLoadingAccountType] = useState(true);
@@ -235,7 +232,7 @@ const HomePage = () => {
 
       // Fetch profile (this will also handle account type storage if needed)
       try {
-        const profileData = await fetchProfile();
+        await fetchProfile();
 
         // If we didn't have a valid account type before, set loading to false now
         if (!userAccountType || userAccountType === "pending_profile_fetch") {
@@ -248,7 +245,7 @@ const HomePage = () => {
     };
 
     initializeData();
-  }, []);
+  }, [userAccountType]);
 
   const openAmountModal = () => {
     setIsAmountModalOpen(true);
@@ -258,9 +255,9 @@ const HomePage = () => {
     setIsPenaltyModalOpen(true);
   };
 
-  const openWithdrawModal = () => {
-    setIsWithdrawModalOpen(true);
-  };
+  // const openWithdrawModal = () => {
+  //   setIsWithdrawModalOpen(true);
+  // };
 
   const handleAmountSubmit = async (e) => {
     e.preventDefault();
@@ -456,6 +453,8 @@ const HomePage = () => {
 
     try {
       const response = await axios.post("/savings/withdraw", obj);
+      console.log(response,"response");
+      
       if (response.data) {
         toast({
           title: getText("success_withdraw_completed"),
@@ -490,7 +489,7 @@ const HomePage = () => {
   // Account type logic - prioritize IndexedDB value over profile value
   const accountType = userAccountType || profile?.account_type;
   const isSavingAccount = accountType?.toLowerCase().includes("saving account");
-  const isLoanAccount = accountType?.toLowerCase().includes("loan account");
+  // const isLoanAccount = accountType?.toLowerCase().includes("loan account");
 
   // Show loading state while account type is being retrieved
   if (isLoadingAccountType) {
@@ -517,8 +516,8 @@ const HomePage = () => {
     loanAmount > 0 ? Math.min((totalPaid / loanAmount) * 100, 100) : 0;
 
   // Account balance for saving account
-  const accountBalance =
-    parseFloat(profile?.saving_account_id?.current_amount) || 0;
+  // const accountBalance =
+  //   parseFloat(profile?.saving_account_id?.current_amount) || 0;
   const depositAmount = parseFloat(profile?.saving_account_id?.current_amount);
 
   return (
