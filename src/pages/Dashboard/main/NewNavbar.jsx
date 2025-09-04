@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../contexts/AuthContext";
 
@@ -14,11 +14,9 @@ import axios from "../../../axios";
 const NewNavbar = () => {
   // const { data: user } = useUser();
   const { logout } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
-  const [pro, setPro] = useState("");
-  const [openDropdown, setOpenDropdown] = useState(null);
+  const { i18n } = useTranslation();
+  // const [openDropdown, setOpenDropdown] = useState(null);
   const [isMenuOpen2, setIsMenuOpen2] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language || 'en');
 
@@ -43,7 +41,7 @@ const NewNavbar = () => {
     }
 
     fetchProfile();
-  }, []);
+  }, [currentLanguage, i18n]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -60,13 +58,13 @@ const NewNavbar = () => {
   }, []);
 
 
-  const toggleDropdown = (menu) => {
-    setOpenDropdown((prev) => (prev === menu ? null : menu));
-  };
+  // const toggleDropdown = (menu) => {
+  //   setOpenDropdown((prev) => (prev === menu ? null : menu));
+  // };
 
-  const closeDropdown = () => {
-    setOpenDropdown(null);
-  };
+  // const closeDropdown = () => {
+  //   setOpenDropdown(null);
+  // };
 
   const changeLanguage = (lang) => {
     i18n.changeLanguage(lang);

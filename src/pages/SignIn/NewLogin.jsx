@@ -81,9 +81,38 @@ const NewLogin = () => {
 
       console.log("Login successful through AuthContext:", result);
 
-      // Navigate to the intended destination
-      console.log("Redirecting to:", from);
-      navigate(from, { replace: true });
+      // Determine redirect path based on user type and role
+      let redirectPath = from;
+      
+      if (result.userType === 'officer') {
+        // Officer-specific routing based on officer_type
+        const officerType = result.data.result?.officer_type || result.data.officer_type;
+        console.log("Officer type:", officerType);
+        
+        switch (officerType) {
+          case 'admin':
+            redirectPath = '/admin/dashboard';
+            break;
+          case 'manager':
+            redirectPath = '/manager/dashboard';
+            break;
+          case 'accounter':
+            redirectPath = '/accounter/dashboard';
+            break;
+          case 'collection_officer':
+            redirectPath = '/officer/dashboard';
+            break;
+          default:
+            redirectPath = '/dash/home';
+        }
+      } else {
+        // Regular user routing
+        redirectPath = from;
+      }
+
+      // Navigate to the determined destination
+      console.log("Redirecting to:", redirectPath);
+      navigate(redirectPath, { replace: true });
 
     } catch (error) {
       console.error("Login error:", error);

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Route, Routes, Navigate, useLocation } from 'react-router-dom'
 import NewDashboard from '../pages/Dashboard/main/NewDashboard';
+import OfficerLayout from '../pages/Dashboard/officer/OfficerLayout';
 import { Riple } from 'react-loading-indicators';
 import NewLogin from '../pages/SignIn/NewLogin';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
 
 const Mainroute = () => {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, userType } = useAuth();
   const [loading, setLoading] = useState(false);
   const location = useLocation();
 
@@ -48,15 +49,19 @@ const Mainroute = () => {
         }
       />
 
-      {/* Root redirect - if authenticated go to dashboard, else go to login */}
+      {/* Root redirect - if authenticated go to appropriate dashboard, else go to login */}
       <Route
         path='/'
         element={
-          <Navigate to={isAuthenticated ? "/dash/home" : "/login"} replace />
+          <Navigate to={
+            isAuthenticated 
+              ? (userType === 'officer' ? "/officer/dashboard" : "/dash/home")
+              : "/login"
+          } replace />
         }
       />
 
-      {/* Protected Dashboard Routes */}
+      {/* Protected User Dashboard Routes */}
       <Route
         path='/dash/*'
         element={
@@ -66,11 +71,55 @@ const Mainroute = () => {
         }
       />
 
+      {/* Protected Officer Dashboard Routes */}
+      <Route
+        path='/officer/*'
+        element={
+          <ProtectedRoute>
+            <OfficerLayout />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin Routes */}
+      <Route
+        path='/admin/*'
+        element={
+          <ProtectedRoute>
+            <OfficerLayout />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Manager Routes */}
+      <Route
+        path='/manager/*'
+        element={
+          <ProtectedRoute>
+            <OfficerLayout />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Accounter Routes */}
+      <Route
+        path='/accounter/*'
+        element={
+          <ProtectedRoute>
+            <OfficerLayout />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Catch all route - redirect to appropriate page based on auth status */}
       <Route
         path='*'
         element={
-          <Navigate to={isAuthenticated ? "/dash/home" : "/login"} replace />
+          <Navigate to={
+            isAuthenticated 
+              ? (userType === 'officer' ? "/officer/dashboard" : "/dash/home")
+              : "/login"
+          } replace />
         }
       />
     </Routes>

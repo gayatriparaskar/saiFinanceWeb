@@ -1,6 +1,6 @@
 {
   "short_name": "Sai Finance",
-  "name": "Sai Finance",
+  "name": "Sai Finance - Digital Banking Platform",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,20 +10,60 @@
     {
       "src": "Sai-removebg-preview.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "Sai-removebg-preview.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#fd3a55",
+  "theme_color": "#1e3a8a",
   "background_color": "#ffffff",
-  "categories": ["finance", "business"],
-  "description": "Start Learning with Earning",
+  "categories": ["finance", "business", "productivity"],
+  "description": "Sai Finance - Your digital banking and financial management platform",
   "scope": "/",
-  "orientation": "portrait-primary"
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "screenshots": [
+    {
+      "src": "Sai-removebg-preview.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your financial dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "Sai-removebg-preview.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "short_name": "Profile",
+      "description": "View your profile",
+      "url": "/profile",
+      "icons": [
+        {
+          "src": "Sai-removebg-preview.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
 }
