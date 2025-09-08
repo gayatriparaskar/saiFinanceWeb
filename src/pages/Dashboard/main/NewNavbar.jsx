@@ -79,8 +79,8 @@ const NewNavbar = () => {
         <img src={Logo} alt="" className="w-full" />
       </div>
 
-      {/* User Name in Center (Mobile Only) */}
-      <div className="lg:hidden flex-1 flex justify-center">
+      {/* User Name in Center (All Devices) */}
+      <div className="flex-1 flex justify-center">
         <h1 className="text-xl font-bold text-gray-800">
           {profile?.full_name || 'Welcome'}
         </h1>

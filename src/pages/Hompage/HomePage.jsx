@@ -12,6 +12,7 @@ import {
   FormControl,
   FormLabel,
   Input,
+  Select,
   Box,
   Text,
   VStack,
@@ -53,6 +54,7 @@ const HomePage = () => {
       allotted_officer: "👮 Allotted Officer",
       monthly_emi: "💳 Daily EMI",
       penalty_amount: "⚠️ Penalty Amount",
+      total_due_amount: "💰 Total Due Amount",
       quick_overview: "⚡ Quick Overview",
       payment_progress: "Payment Progress",
       remaining_balance: "Remaining Balance",
@@ -104,6 +106,7 @@ const HomePage = () => {
       mobile_number: "मोबाइल नंबर",
       monthly_emi: "दैनिक ईएमआई",
       penalty_amount: "जुर्माना राशि",
+      total_due_amount: "कुल देय राशि",
       quick_overview: "त्वरित अवलोकन",
       payment_progress: "भुगतान प्रगति",
       remaining_balance: "शेष राशि",
@@ -157,9 +160,32 @@ const HomePage = () => {
   const [collected_officer_code, setPin] = useState("");
   const [profile, setProfile] = useState([]);
   const [addPenaltyFlag] = useState(true);
+  const [penaltyType, setPenaltyType] = useState("percentage");
+  const [penaltyValue, setPenaltyValue] = useState("5");
+  const [penaltyAppliedToday, setPenaltyAppliedToday] = useState(false);
   const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
   const [userAccountType, setUserAccountType] = useState(null);
   const [isLoadingAccountType, setIsLoadingAccountType] = useState(true);
+
+  // Function to check if penalty was applied today
+  const checkPenaltyStatus = async () => {
+    try {
+      const response = await axios.get("/dailyCollections");
+      const collections = response?.data?.result || [];
+      
+      const today = new Date().toDateString();
+      const penaltyToday = collections.find(collection => {
+        const collectionDate = new Date(collection.created_on).toDateString();
+        return collectionDate === today && collection.penalty_type;
+      });
+      
+      setPenaltyAppliedToday(!!penaltyToday);
+      console.log("Penalty status for today:", !!penaltyToday);
+    } catch (error) {
+      console.error("Error checking penalty status:", error);
+      setPenaltyAppliedToday(false);
+    }
+  };
 
   // Function to fetch and update profile data
   const fetchProfile = async (showLoading = false) => {
@@ -169,6 +195,9 @@ const HomePage = () => {
       const profileData = response?.data?.result;
       setProfile(profileData);
       console.log("Profile data updated:", profileData);
+      
+      // Check if penalty was applied today
+      await checkPenaltyStatus();
 
       // Check if we need to update the account type in IndexedDB
       if (profileData?.account_type) {
@@ -208,6 +237,9 @@ const HomePage = () => {
 
   useEffect(() => {
     const initializeData = async () => {
+      // Always clear officer code on page load
+      setPin("");
+      
       // Get account type from IndexedDB first
       try {
         const accountType = await getAccountType();
@@ -247,10 +279,28 @@ const HomePage = () => {
 
   const openAmountModal = () => {
     setIsAmountModalOpen(true);
+    // Always clear officer code when opening modal
+    setPin("");
   };
 
   const openPenaltyModal = () => {
+    // Check if penalty was already applied today
+    if (penaltyAppliedToday) {
+      toast({
+        title: "Penalty has already been applied today for this loan. Please try again tomorrow.",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
+    
     setIsPenaltyModalOpen(true);
+    // Reset penalty form to default values
+    setPenaltyType("percentage");
+    setPenaltyValue("5");
+    setPin("");
   };
 
   // const openWithdrawModal = () => {
@@ -289,10 +339,11 @@ const HomePage = () => {
         }
       }
     } catch (error) {
+      const errorMessage = error.response?.data?.message || getText("something_went_wrong");
       toast({
-        title: getText("something_went_wrong"),
+        title: errorMessage,
         status: "error",
-        duration: 4000,
+        duration: 5000,
         isClosable: true,
         position: "top",
       });
@@ -366,10 +417,11 @@ const HomePage = () => {
         }
       }
     } catch (error) {
+      const errorMessage = error.response?.data?.message || getText("something_went_wrong");
       toast({
-        title: getText("something_went_wrong"),
+        title: errorMessage,
         status: "error",
-        duration: 4000,
+        duration: 5000,
         isClosable: true,
         position: "top",
       });
@@ -380,7 +432,35 @@ const HomePage = () => {
     setIsAmountModalOpen(false);
     setIsPenaltyModalOpen(false);
 
-    const obj = { collected_officer_code, addPenaltyFlag };
+    // Validation
+    if (!collected_officer_code || !penaltyValue) {
+      toast({
+        title: "Please fill in all required fields",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
+
+    if (parseFloat(penaltyValue) <= 0) {
+      toast({
+        title: "Penalty value must be greater than 0",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
+
+    const obj = { 
+      collected_officer_code, 
+      addPenaltyFlag: true,
+      penaltyType,
+      penaltyValue: parseFloat(penaltyValue)
+    };
 
     try {
       const response = await axios.post("/dailyCollections", obj);
@@ -395,10 +475,14 @@ const HomePage = () => {
 
         // Clear form fields
         setPin("");
+        setPenaltyValue("5");
+        setPenaltyType("percentage");
 
         // Refetch profile data to get updated information
         try {
           await fetchProfile();
+          // Also check penalty status after successful penalty application
+          await checkPenaltyStatus();
         } catch (profileError) {
           console.error("Error refetching profile:", profileError);
           // Fallback to page reload if profile refetch fails
@@ -406,10 +490,15 @@ const HomePage = () => {
         }
       }
     } catch (error) {
+      console.error("Penalty submission error:", error);
+      
+      // Handle specific error messages from backend
+      const errorMessage = error.response?.data?.message || getText("something_went_wrong");
+      
       toast({
-        title: getText("something_went_wrong"),
+        title: errorMessage,
         status: "error",
-        duration: 4000,
+        duration: 5000,
         isClosable: true,
         position: "top",
       });
@@ -900,10 +989,10 @@ const HomePage = () => {
               </MotionButton>
 
               <MotionButton
-                whileHover={{ scale: 1.02, y: -3 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: penaltyAppliedToday ? 1 : 1.02, y: penaltyAppliedToday ? 0 : -3 }}
+                whileTap={{ scale: penaltyAppliedToday ? 1 : 0.98 }}
                 onClick={openPenaltyModal}
-                bg="linear-gradient(135deg, #ef4444, #dc2626)"
+                bg={penaltyAppliedToday ? "linear-gradient(135deg, #6b7280, #4b5563)" : "linear-gradient(135deg, #ef4444, #dc2626)"}
                 color="white"
                 size="lg"
                 borderRadius="xl"
@@ -918,8 +1007,12 @@ const HomePage = () => {
                 w={{ base: "full", md: "auto" }}
                 minW="200px"
                 h={{ base: "60px", md: "70px" }}
+                cursor={penaltyAppliedToday ? "not-allowed" : "pointer"}
+                opacity={penaltyAppliedToday ? 0.7 : 1}
               >
-                <Text>{getText("add_penalty")}</Text>
+                <Text>
+                  {penaltyAppliedToday ? "⚠️ Penalty Applied Today" : getText("add_penalty")}
+                </Text>
               </MotionButton>
             </Flex>
           )}
@@ -967,7 +1060,12 @@ const HomePage = () => {
                     icon: "👮",
                   },
                   ...(isSavingAccount
-                    ? []
+                    ? [
+                        {
+                          key: "withdraw_amount",
+                          value: `₹${profile?.saving_account_id?.total_withdrawal || 0}`,
+                        },
+                      ]
                     : [
                         {
                           key: "monthly_emi",
@@ -975,7 +1073,7 @@ const HomePage = () => {
                         },
                         {
                           key: "penalty_amount",
-                          value: `${profile?.active_loan_id?.total_penalty_amount}`,
+                          value: `₹${profile?.active_loan_id?.total_penalty_amount || 0}`,
                         },
                       ]),
                 ].map((item, index) => (
@@ -1101,7 +1199,10 @@ const HomePage = () => {
         {isAmountModalOpen && (
           <Modal
             isOpen={isAmountModalOpen}
-            onClose={() => setIsAmountModalOpen(false)}
+            onClose={() => {
+              setIsAmountModalOpen(false);
+              setPin(""); // Clear officer code when closing modal
+            }}
             isCentered
             size={{ base: "sm", md: "md" }}
           >
@@ -1191,7 +1292,10 @@ const HomePage = () => {
               </ModalBody>
               <ModalFooter gap={3}>
                 <Button
-                  onClick={() => setIsAmountModalOpen(false)}
+                  onClick={() => {
+                    setIsAmountModalOpen(false);
+                    setPin(""); // Clear officer code when closing modal
+                  }}
                   variant="outline"
                   borderRadius="xl"
                   size="lg"
@@ -1225,7 +1329,10 @@ const HomePage = () => {
         {isPenaltyModalOpen && (
           <Modal
             isOpen={isPenaltyModalOpen}
-            onClose={() => setIsPenaltyModalOpen(false)}
+            onClose={() => {
+              setIsPenaltyModalOpen(false);
+              setPin(""); // Clear officer code when closing modal
+            }}
             isCentered
             size={{ base: "sm", md: "md" }}
           >
@@ -1254,34 +1361,117 @@ const HomePage = () => {
               </ModalHeader>
               <ModalCloseButton size="lg" />
               <ModalBody py={6}>
-                <FormControl isRequired>
-                  <FormLabel
-                    fontWeight="semibold"
-                    color="gray.700"
-                    fontSize="md"
-                  >
-                    {getText("officer_pin")}
-                  </FormLabel>
-                  <Input
-                    type="text"
-                    value={collected_officer_code}
-                    onChange={(e) => setPin(e.target.value)}
-                    placeholder={getText("enter_officer_pin")}
-                    size="lg"
-                    borderRadius="xl"
-                    border="2px solid"
-                    borderColor="gray.200"
-                    _focus={{
-                      borderColor: "#ef4444",
-                      boxShadow: "0 0 0 1px #ef4444",
-                    }}
-                    bg="white"
-                  />
-                </FormControl>
+                <VStack spacing={4}>
+                  {/* Officer PIN */}
+                  <FormControl isRequired>
+                    <FormLabel
+                      fontWeight="semibold"
+                      color="gray.700"
+                      fontSize="md"
+                    >
+                      {getText("officer_pin")}
+                    </FormLabel>
+                    <Input
+                      type="text"
+                      value={collected_officer_code}
+                      onChange={(e) => setPin(e.target.value)}
+                      placeholder={getText("enter_officer_pin")}
+                      size="lg"
+                      borderRadius="xl"
+                      border="2px solid"
+                      borderColor="gray.200"
+                      _focus={{
+                        borderColor: "#ef4444",
+                        boxShadow: "0 0 0 1px #ef4444",
+                      }}
+                      bg="white"
+                    />
+                  </FormControl>
+
+                  {/* Penalty Type */}
+                  <FormControl isRequired>
+                    <FormLabel
+                      fontWeight="semibold"
+                      color="gray.700"
+                      fontSize="md"
+                    >
+                      Penalty Type
+                    </FormLabel>
+                    <Select
+                      value={penaltyType}
+                      onChange={(e) => setPenaltyType(e.target.value)}
+                      size="lg"
+                      borderRadius="xl"
+                      border="2px solid"
+                      borderColor="gray.200"
+                      _focus={{
+                        borderColor: "#ef4444",
+                        boxShadow: "0 0 0 1px #ef4444",
+                      }}
+                      bg="white"
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="amount">Fixed Amount (₹)</option>
+                    </Select>
+                  </FormControl>
+
+                  {/* Penalty Value */}
+                  <FormControl isRequired>
+                    <FormLabel
+                      fontWeight="semibold"
+                      color="gray.700"
+                      fontSize="md"
+                    >
+                      {penaltyType === "percentage" ? "Penalty Percentage (%)" : "Penalty Amount (₹)"}
+                    </FormLabel>
+                    <Input
+                      type="number"
+                      value={penaltyValue}
+                      onChange={(e) => setPenaltyValue(e.target.value)}
+                      placeholder={penaltyType === "percentage" ? "Enter percentage (e.g., 5)" : "Enter amount (e.g., 100)"}
+                      size="lg"
+                      borderRadius="xl"
+                      border="2px solid"
+                      borderColor="gray.200"
+                      _focus={{
+                        borderColor: "#ef4444",
+                        boxShadow: "0 0 0 1px #ef4444",
+                      }}
+                      bg="white"
+                      min="0"
+                      step={penaltyType === "percentage" ? "0.1" : "1"}
+                    />
+                  </FormControl>
+
+                  {/* Penalty Preview */}
+                  {penaltyValue && (
+                    <Box
+                      p={3}
+                      bg="red.50"
+                      borderRadius="lg"
+                      border="1px solid"
+                      borderColor="red.200"
+                      w="full"
+                    >
+                      <Text fontSize="sm" color="red.700" fontWeight="medium">
+                        Penalty Preview: {penaltyType === "percentage" 
+                          ? `${penaltyValue}% of total due amount` 
+                          : `₹${penaltyValue} fixed penalty`
+                        }
+                      </Text>
+                    </Box>
+                  )}
+                </VStack>
               </ModalBody>
               <ModalFooter gap={3}>
                 <Button
-                  onClick={() => setIsPenaltyModalOpen(false)}
+                  onClick={() => {
+                    setIsPenaltyModalOpen(false);
+                    // Reset form when closing
+                    setPenaltyType("percentage");
+                    setPenaltyValue("5");
+                    setPin("");
+                  }}
                   variant="outline"
                   borderRadius="xl"
                   size="lg"
@@ -1309,7 +1499,10 @@ const HomePage = () => {
         {isWithdrawModalOpen && (
           <Modal
             isOpen={isWithdrawModalOpen}
-            onClose={() => setIsWithdrawModalOpen(false)}
+            onClose={() => {
+              setIsWithdrawModalOpen(false);
+              setPin(""); // Clear officer code when closing modal
+            }}
             isCentered
             size={{ base: "sm", md: "md" }}
           >
@@ -1391,7 +1584,10 @@ const HomePage = () => {
               </ModalBody>
               <ModalFooter gap={3}>
                 <Button
-                  onClick={() => setIsWithdrawModalOpen(false)}
+                  onClick={() => {
+                    setIsWithdrawModalOpen(false);
+                    setPin(""); // Clear officer code when closing modal
+                  }}
                   variant="outline"
                   borderRadius="xl"
                   size="lg"
