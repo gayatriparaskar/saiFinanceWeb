@@ -159,7 +159,6 @@ const HomePage = () => {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [collected_officer_code, setPin] = useState("");
   const [profile, setProfile] = useState([]);
-  const [addPenaltyFlag] = useState(true);
   const [penaltyType, setPenaltyType] = useState("percentage");
   const [penaltyValue, setPenaltyValue] = useState("5");
   const [penaltyAppliedToday, setPenaltyAppliedToday] = useState(false);
@@ -275,7 +274,7 @@ const HomePage = () => {
     };
 
     initializeData();
-  }, [userAccountType]);
+  }, [userAccountType, fetchProfile]);
 
   const openAmountModal = () => {
     setIsAmountModalOpen(true);
