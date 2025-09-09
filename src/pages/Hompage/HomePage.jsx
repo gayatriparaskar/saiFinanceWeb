@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   useToast,
   Modal,
@@ -167,7 +167,7 @@ const HomePage = () => {
   const [isLoadingAccountType, setIsLoadingAccountType] = useState(true);
 
   // Function to check if penalty was applied today
-  const checkPenaltyStatus = async () => {
+  const checkPenaltyStatus = useCallback(async () => {
     try {
       const response = await axios.get("/dailyCollections");
       const collections = response?.data?.result || [];
@@ -184,10 +184,10 @@ const HomePage = () => {
       console.error("Error checking penalty status:", error);
       setPenaltyAppliedToday(false);
     }
-  };
+  }, []);
 
   // Function to fetch and update profile data
-  const fetchProfile = async (showLoading = false) => {
+  const fetchProfile = useCallback(async (showLoading = false) => {
     try {
       if (showLoading) setIsUpdatingBalance(true);
       const response = await axios.get("/users/profile");
@@ -232,7 +232,7 @@ const HomePage = () => {
     } finally {
       if (showLoading) setIsUpdatingBalance(false);
     }
-  };
+  }, [checkPenaltyStatus]);
 
   useEffect(() => {
     const initializeData = async () => {
