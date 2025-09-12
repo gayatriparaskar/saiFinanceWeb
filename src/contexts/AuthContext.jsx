@@ -87,38 +87,79 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (credentials) => {
+    // Prevent multiple simultaneous login attempts
+    if (isLoading) {
+      console.log("⚠️ Login already in progress, skipping...");
+      return { success: false, message: "Login already in progress" };
+    }
+    
     try {
       setIsLoading(true);
       
       // Import axios here to avoid circular dependency
       const axios = (await import('../axios')).default;
       
-      console.log("Attempting login with AuthContext...");
+      console.log("🚀🚀🚀 FRESH CODE VERSION 4 - Attempting login with AuthContext...");
+      console.log("🚀 Login attempt timestamp:", new Date().toISOString());
       
-      // Try user login first
+      // Try officer login first, then user login
       let response;
-      let loginType = 'user';
+      let loginType = 'officer';
       
       try {
-        response = await axios.post("users/login", {
+        console.log("Trying officer login first...");
+        response = await axios.post("officers/login", {
           phone_number: credentials.phone_number.trim(),
           password: credentials.password.trim()
         });
-        console.log("User login successful:", response.data);
-      } catch (userError) {
-        console.log("User login failed, trying officer login...");
+        loginType = 'officer';
+        console.log("Officer login successful:", response.data);
+          
+          // DIRECT TOKEN EXTRACTION AND STORAGE - BYPASS COMPLEX FLOW
+          const accessToken = response.data.result?.accessToken;
+          const userData = response.data.result;
+          
+          console.log("🔑 DIRECT EXTRACTION - accessToken:", !!accessToken);
+          console.log("🔑 DIRECT EXTRACTION - userData:", !!userData);
+          console.log("🔑 DIRECT EXTRACTION - officer_type:", userData?.officer_type);
+          
+          if (accessToken && userData) {
+            console.log("✅ DIRECT STORAGE - Storing authentication data...");
+            
+            // Store in localStorage
+            localStorage.setItem("token", accessToken);
+            localStorage.setItem("userType", loginType);
+            localStorage.setItem("userRole", userData.officer_type);
+            
+            // Update state
+            setToken(accessToken);
+            setIsAuthenticated(true);
+            setUserType(loginType);
+            setUser(userData);
+            setUserRole(userData.officer_type);
+            
+            console.log("✅ DIRECT STORAGE - Authentication complete!");
+            console.log("✅ DIRECT STORAGE - Token in localStorage:", !!localStorage.getItem("token"));
+            
+            return { success: true, data: response.data, userType: loginType };
+          } else {
+            console.log("❌ DIRECT EXTRACTION - Missing token or userData");
+            throw new Error("Token or user data missing from response");
+          }
+      } catch (officerError) {
+        console.log("Officer login failed, trying user login...");
         
-        // If user login fails, try officer login
+        // If officer login fails, try user login
         try {
-          response = await axios.post("officers/login", {
+          response = await axios.post("users/login", {
             phone_number: credentials.phone_number.trim(),
             password: credentials.password.trim()
           });
-          loginType = 'officer';
-          console.log("Officer login successful:", response.data);
-        } catch (officerError) {
-          console.log("Both user and officer login failed");
-          throw userError; // Throw the original user error
+          loginType = 'user';
+          console.log("User login successful:", response.data);
+        } catch (userError) {
+          console.log("Both officer and user login failed");
+          throw officerError; // Throw the original officer error
         }
       }
 
@@ -126,17 +167,31 @@ export const AuthProvider = ({ children }) => {
       let accessToken = null;
       let userData = null;
       
+      console.log("🔍 Token extraction - loginType:", loginType);
+      console.log("🔍 Token extraction - response.data:", response.data);
+      
       if (loginType === 'officer') {
         // Officer login response structure: { success: true, result: { accessToken, ...officerData } }
+        console.log("🔍 Officer login - response.data.result:", response.data.result);
+        console.log("🔍 Officer login - response.data.result.accessToken:", response.data.result?.accessToken);
+        
         accessToken = response.data.result?.accessToken;
         userData = response.data.result;
+        
+        console.log("🔍 Officer login - accessToken extracted:", accessToken);
+        console.log("🔍 Officer login - userData extracted:", userData);
       } else {
         // User login response structure: { accessToken, user: {...} }
         accessToken = response.data.accessToken;
         userData = response.data.result || response.data.user || response.data;
       }
 
+      console.log("🔍 Final check - response.data:", !!response.data);
+      console.log("🔍 Final check - accessToken:", !!accessToken);
+      console.log("🔍 Final check - accessToken value:", accessToken);
+      
       if (response.data && accessToken) {
+        console.log("✅ Token found, proceeding with authentication setup");
         
         // Store token and user type in localStorage
         localStorage.setItem("token", accessToken);
@@ -193,6 +248,11 @@ export const AuthProvider = ({ children }) => {
         console.log("Login successful with AuthContext");
         return { success: true, data: response.data, userType: loginType };
       } else {
+        console.error("❌ Token extraction failed:");
+        console.error("❌ response.data exists:", !!response.data);
+        console.error("❌ accessToken exists:", !!accessToken);
+        console.error("❌ accessToken value:", accessToken);
+        console.error("❌ response.data structure:", response.data);
         throw new Error("Login successful but no access token received");
       }
     } catch (error) {

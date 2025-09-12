@@ -23,6 +23,14 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
+  // Skip caching for login requests and API calls
+  if (event.request.url.includes('/api/') || 
+      event.request.url.includes('/login') ||
+      event.request.url.includes('/officers/login') ||
+      event.request.url.includes('/users/login')) {
+    return fetch(event.request);
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {

@@ -93,6 +93,8 @@ const HomePage = () => {
       Send_Deposit_Amount: "Send Deposit Amount",
       Deposit_Amount: "Deposit Amount",
       Enter_Deposit_Amount: "Enter amount to deposit",
+      remaining_emi_days: "Remaining EMI Days",
+      emi_amount: "EMI Amount",
     },
     hi: {
       active_account: "सक्रिय खाता",
@@ -127,6 +129,8 @@ const HomePage = () => {
       submit_payment: "भुगतान जमा करें",
       apply_penalty: "जुर्माना लगाएं",
       add_withdraw_details: "निकासी राशि",
+      remaining_emi_days: "शेष ईएमआई दिन",
+      emi_amount: "ईएमआई राशि",
       withdraw_amount: "निकासी राशि",
       enter_withdraw_amount: "निकासी राशि दर्ज करें",
       submit_withdraw: "निकासी जमा करें",
@@ -165,26 +169,55 @@ const HomePage = () => {
   const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
   const [userAccountType, setUserAccountType] = useState(null);
   const [isLoadingAccountType, setIsLoadingAccountType] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Function to check if penalty was applied today
   const checkPenaltyStatus = useCallback(async () => {
     try {
+      // Only check loan collections for penalties (saving accounts don't have penalties)
       const response = await axios.get("/dailyCollections");
       const collections = response?.data?.result || [];
       
-      const today = new Date().toDateString();
+      // Get current user ID from profile or token
+      const currentUserId = profile?._id;
+      if (!currentUserId) {
+        console.log("No user ID available for penalty check");
+        setPenaltyAppliedToday(false);
+        return;
+      }
+      
+      const today = new Date();
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+      
+      // Check if penalty was applied today for THIS specific user
       const penaltyToday = collections.find(collection => {
-        const collectionDate = new Date(collection.created_on).toDateString();
-        return collectionDate === today && collection.penalty_type;
+        const collectionDate = new Date(collection.created_on);
+        const isToday = collectionDate >= startOfToday && collectionDate <= endOfToday;
+        const isCurrentUser = collection.user_id === currentUserId || collection.user_id?._id === currentUserId;
+        const hasPenalty = collection.penalty_type && collection.penalty_type !== null;
+        
+        console.log("Checking collection:", {
+          collectionId: collection._id,
+          userId: collection.user_id,
+          currentUserId,
+          isCurrentUser,
+          isToday,
+          hasPenalty,
+          penaltyType: collection.penalty_type,
+          createdOn: collection.created_on
+        });
+        
+        return isToday && isCurrentUser && hasPenalty;
       });
       
       setPenaltyAppliedToday(!!penaltyToday);
-      console.log("Penalty status for today:", !!penaltyToday);
+      console.log("Penalty status for today for user", currentUserId, ":", !!penaltyToday);
     } catch (error) {
       console.error("Error checking penalty status:", error);
       setPenaltyAppliedToday(false);
     }
-  }, []);
+  }, [profile?._id]);
 
   // Function to fetch and update profile data
   const fetchProfile = useCallback(async (showLoading = false) => {
@@ -195,8 +228,13 @@ const HomePage = () => {
       setProfile(profileData);
       console.log("Profile data updated:", profileData);
       
-      // Check if penalty was applied today
-      await checkPenaltyStatus();
+      // Only check penalty status for loan accounts (saving accounts don't have penalties)
+      if (profileData?.account_type === "loan account" || !profileData?.account_type) {
+        await checkPenaltyStatus();
+      } else {
+        // For saving accounts, set penalty status to false (no API call needed)
+        setPenaltyAppliedToday(false);
+      }
 
       // Check if we need to update the account type in IndexedDB
       if (profileData?.account_type) {
@@ -274,7 +312,7 @@ const HomePage = () => {
     };
 
     initializeData();
-  }, [userAccountType, fetchProfile]);
+  }, [userAccountType]);
 
   const openAmountModal = () => {
     setIsAmountModalOpen(true);
@@ -283,10 +321,15 @@ const HomePage = () => {
   };
 
   const openPenaltyModal = () => {
+    // Debug: Log current penalty status
+    console.log("Opening penalty modal. Current penalty status:", penaltyAppliedToday);
+    console.log("Current user profile:", profile);
+    
     // Check if penalty was already applied today
     if (penaltyAppliedToday) {
       toast({
         title: "Penalty has already been applied today for this loan. Please try again tomorrow.",
+        description: `User ID: ${profile?._id}`,
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -308,6 +351,11 @@ const HomePage = () => {
 
   const handleAmountSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     setIsAmountModalOpen(false);
     setIsPenaltyModalOpen(false);
 
@@ -346,11 +394,18 @@ const HomePage = () => {
         isClosable: true,
         position: "top",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handlessavingAmountSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     setIsAmountModalOpen(false);
     setIsPenaltyModalOpen(false);
 
@@ -363,6 +418,7 @@ const HomePage = () => {
         isClosable: true,
         position: "top",
       });
+      setIsSubmitting(false);
       return;
     }
 
@@ -374,6 +430,7 @@ const HomePage = () => {
         isClosable: true,
         position: "top",
       });
+      setIsSubmitting(false);
       return;
     }
 
@@ -386,6 +443,7 @@ const HomePage = () => {
         isClosable: true,
         position: "top",
       });
+      setIsSubmitting(false);
       return;
     }
 
@@ -424,10 +482,17 @@ const HomePage = () => {
         isClosable: true,
         position: "top",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   const handlePenaltySubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     setIsAmountModalOpen(false);
     setIsPenaltyModalOpen(false);
 
@@ -440,6 +505,7 @@ const HomePage = () => {
         isClosable: true,
         position: "top",
       });
+      setIsSubmitting(false);
       return;
     }
 
@@ -451,6 +517,7 @@ const HomePage = () => {
         isClosable: true,
         position: "top",
       });
+      setIsSubmitting(false);
       return;
     }
 
@@ -480,8 +547,7 @@ const HomePage = () => {
         // Refetch profile data to get updated information
         try {
           await fetchProfile();
-          // Also check penalty status after successful penalty application
-          await checkPenaltyStatus();
+          // Note: checkPenaltyStatus() is already called inside fetchProfile()
         } catch (profileError) {
           console.error("Error refetching profile:", profileError);
           // Fallback to page reload if profile refetch fails
@@ -501,6 +567,8 @@ const HomePage = () => {
         isClosable: true,
         position: "top",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1061,8 +1129,18 @@ const HomePage = () => {
                   ...(isSavingAccount
                     ? [
                         {
+                          key: "emi_amount",
+                          value: `₹${profile?.saving_account_id?.emi_amount || 0}`,
+                          icon: "💰",
+                        },
+                        {
                           key: "withdraw_amount",
                           value: `₹${profile?.saving_account_id?.total_withdrawal || 0}`,
+                        },
+                        {
+                          key: "remaining_emi_days",
+                          value: `${profile?.saving_account_id?.remaining_emi_days || 0} days`,
+                          icon: "📅",
                         },
                       ]
                     : [
@@ -1073,6 +1151,11 @@ const HomePage = () => {
                         {
                           key: "penalty_amount",
                           value: `₹${profile?.active_loan_id?.total_penalty_amount || 0}`,
+                        },
+                        {
+                          key: "remaining_emi_days",
+                          value: `${profile?.active_loan_id?.remaining_emi_days || 0} days`,
+                          icon: "📅",
                         },
                       ]),
                 ].map((item, index) => (
@@ -1166,6 +1249,28 @@ const HomePage = () => {
                     </Text>
                     <Text color="white" fontSize="xl" fontWeight="bold">
                       ₹{totalDue.toLocaleString()}
+                    </Text>
+                  </CardBody>
+                </Card>
+
+                <Card bg="linear-gradient(135deg, #8b5cf6, #7c3aed)" w="full">
+                  <CardBody p={4} textAlign="center">
+                    <Text
+                      color="white"
+                      fontSize="sm"
+                      fontWeight="medium"
+                      opacity="0.9"
+                    >
+                      {getText("remaining_emi_days")}
+                    </Text>
+                    <Text color="white" fontSize="2xl" fontWeight="bold">
+                      {isSavingAccount 
+                        ? (profile?.saving_account_id?.remaining_emi_days || 0)
+                        : (profile?.active_loan_id?.remaining_emi_days || 0)
+                      }
+                    </Text>
+                    <Text color="white" fontSize="xs" opacity="0.8">
+                      days remaining
                     </Text>
                   </CardBody>
                 </Card>
@@ -1312,6 +1417,9 @@ const HomePage = () => {
                   borderRadius="xl"
                   size="lg"
                   _hover={{ bg: "#059669" }}
+                  isLoading={isSubmitting}
+                  loadingText={isSavingAccount ? "Processing Deposit..." : "Processing Payment..."}
+                  isDisabled={isSubmitting}
                 >
                   {isSavingAccount
                     ? getText("Send_Deposit_Amount")
@@ -1484,6 +1592,9 @@ const HomePage = () => {
                   borderRadius="xl"
                   size="lg"
                   _hover={{ bg: "#dc2626" }}
+                  isLoading={isSubmitting}
+                  loadingText="Applying Penalty..."
+                  isDisabled={isSubmitting}
                 >
                   {getText("apply_penalty")}
                 </Button>

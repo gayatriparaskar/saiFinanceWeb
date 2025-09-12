@@ -29,7 +29,9 @@ import {
 import { 
   FiMenu,
   FiHome,
-  FiUsers
+  FiUsers,
+  FiCalendar,
+  FiBarChart2
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import Logo from "../../../Images/Sai-finance-logo.png";
@@ -140,6 +142,26 @@ const OfficerNavbar = () => {
               size={{ base: "sm", md: "md" }}
             >
               Dashboard
+            </Button>
+            
+            <Button
+              variant="ghost"
+              leftIcon={<FiCalendar />}
+              onClick={() => navigate('/officer/daily-report')}
+              colorScheme="green"
+              size={{ base: "sm", md: "md" }}
+            >
+              Daily Report
+            </Button>
+            
+            <Button
+              variant="ghost"
+              leftIcon={<FiBarChart2 />}
+              onClick={() => navigate('/officer/weekly-report')}
+              colorScheme="purple"
+              size={{ base: "sm", md: "md" }}
+            >
+              Weekly Report
             </Button>
             
             {userRole === 'admin' && (
@@ -297,6 +319,38 @@ const OfficerNavbar = () => {
                     borderRadius="md"
                   >
                     Dashboard
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    leftIcon={<FiCalendar />}
+                    onClick={() => {
+                      navigate('/officer/daily-report');
+                      onClose();
+                    }}
+                    w="full"
+                    justifyContent="flex-start"
+                    size="lg"
+                    borderRadius="md"
+                    colorScheme="green"
+                  >
+                    Daily Report
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    leftIcon={<FiBarChart2 />}
+                    onClick={() => {
+                      navigate('/officer/weekly-report');
+                      onClose();
+                    }}
+                    w="full"
+                    justifyContent="flex-start"
+                    size="lg"
+                    borderRadius="md"
+                    colorScheme="purple"
+                  >
+                    Weekly Report
                   </Button>
                   
                   {userRole === 'admin' && (

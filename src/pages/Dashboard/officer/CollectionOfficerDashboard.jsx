@@ -11,14 +11,26 @@ import {
   Button,
   useToast,
   Spinner,
-  Center
+  Center,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  IconButton,
+  Tooltip
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { ViewIcon } from '@chakra-ui/icons';
 
 const CollectionOfficerDashboard = () => {
   const { user, isLoading: authLoading } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   
   const [loading, setLoading] = useState(true);
   const [dailyCollections, setDailyCollections] = useState([]);
@@ -42,6 +54,7 @@ const CollectionOfficerDashboard = () => {
     }
   }, [user, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
+
   const fetchOfficerData = async () => {
     try {
       setLoading(true);
@@ -53,12 +66,39 @@ const CollectionOfficerDashboard = () => {
         return;
       }
       
-      // Since there's no GET endpoint for officer collection data,
-      // we'll use the officer data from the login response and
-      // fetch additional data from available endpoints
+      console.log('🔄 Fetching fresh officer data from backend...');
       
-      // Get officer's basic collection data from the user object
-      const officerData = user;
+      // Import axios here to avoid circular dependency
+      const axios = (await import('../../../axios')).default;
+      
+      // Fetch fresh officer data from backend using existing officers API
+      const response = await axios.get(`/officers/${user._id}`);
+      const officerData = response.data.result;
+      
+      // Fetch all daily collections for today's calculation
+      const dailyResponse = await axios.get(`/dailyCollections`);
+      const allDailyCollections = dailyResponse.data?.result || [];
+      
+      console.log('✅ Fresh officer data received:', {
+        name: officerData.name,
+        userCollectionsCount: officerData.user_collections?.length || 0,
+        totalLoanAmount: officerData.totalLoanAmount,
+        totalSavingAmount: officerData.totalSavingAmount,
+        userCollections: officerData.user_collections
+      });
+      
+      // Debug user collections breakdown
+      if (officerData.user_collections) {
+        const loanCollections = officerData.user_collections.filter(c => c.account_type === 'loan account');
+        const savingCollections = officerData.user_collections.filter(c => c.account_type === 'saving account');
+        console.log('🔍 Officer collections breakdown:', {
+          total: officerData.user_collections.length,
+          loanCollections: loanCollections.length,
+          savingCollections: savingCollections.length,
+          loanUserIds: loanCollections.map(c => c.user_id),
+          savingUserIds: savingCollections.map(c => c.user_id)
+        });
+      }
       
       // Set total collections from officer model fields
       setTotalCollections({
@@ -68,17 +108,284 @@ const CollectionOfficerDashboard = () => {
         pendingCollections: officerData.user_collections?.filter(c => c.collected_amount === 0).length || 0
       });
       
-      // Set today's stats from officer model fields
-      setTodayStats({
-        todayAmount: (officerData.todayLoanAmount || 0) + (officerData.todaySavingAmount || 0),
-        todayLoans: officerData.todayLoanAmount || 0,
-        todaySavings: officerData.todaySavingAmount || 0,
-        todayCount: officerData.user_collections?.filter(c => {
-          const today = new Date().toISOString().split('T')[0];
-          const collectionDate = new Date(c.collected_on).toISOString().split('T')[0];
-          return collectionDate === today && c.collected_amount > 0;
-        }).length || 0
+      // Calculate today's collections for this specific officer
+      const today = new Date().toISOString().split('T')[0];
+      console.log('📅 Today\'s date:', today, 'Officer ID:', user._id);
+      
+      // Get officer model fields for reference
+      const officerTodayLoanAmount = officerData.todayLoanAmount || 0;
+      const officerTodaySavingAmount = officerData.todaySavingAmount || 0;
+      
+      console.log('📊 Officer Today\'s Performance from Model:', {
+        officerTodayLoanAmount,
+        officerTodaySavingAmount,
+        totalFromModel: officerTodayLoanAmount + officerTodaySavingAmount,
+        allDailyCollectionsCount: allDailyCollections.length,
+        today: new Date().toISOString().split('T')[0],
+        officerId: user._id
       });
+      
+      // If officer model fields are 0, try real-time calculation as fallback
+      if (officerTodayLoanAmount === 0 && officerTodaySavingAmount === 0) {
+        console.log('🔄 Officer model fields are 0, trying real-time calculation...');
+        
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get today's loan collections
+        const todayLoanCollections = allDailyCollections.filter(collection => {
+          const collectionDate = new Date(collection.created_on).toISOString().split('T')[0];
+          return collectionDate === today && collection.collected_by === user._id;
+        });
+        
+        console.log('🔍 Today\'s Loan Collections Debug:', {
+          allDailyCollectionsCount: allDailyCollections.length,
+          todayLoanCollectionsCount: todayLoanCollections.length,
+          today,
+          officerId: user._id,
+          sampleCollection: allDailyCollections[0]
+        });
+        
+        // Get today's saving collections
+        let todaySavingCollections = [];
+        try {
+          const savingResponse = await axios.get(`/savingDailyCollections/getAllSavings`);
+          const allSavingCollections = savingResponse.data?.result || [];
+          todaySavingCollections = allSavingCollections.filter(collection => {
+            const collectionDate = new Date(collection.created_on).toISOString().split('T')[0];
+            return collectionDate === today && collection.collected_by === user._id;
+          });
+          
+          console.log('🔍 Today\'s Saving Collections Debug:', {
+            allSavingCollectionsCount: allSavingCollections.length,
+            todaySavingCollectionsCount: todaySavingCollections.length,
+            today,
+            officerId: user._id,
+            sampleSavingCollection: allSavingCollections[0]
+          });
+        } catch (savingError) {
+          console.warn('Could not fetch today\'s saving collections:', savingError);
+        }
+        
+        // Calculate today's amounts from collections
+        const todayLoanAmount = todayLoanCollections.reduce((sum, collection) => sum + (collection.amount || 0), 0);
+        const todaySavingAmount = todaySavingCollections.reduce((sum, collection) => sum + (collection.deposit_amount || 0), 0);
+        
+        console.log('📊 Today\'s Performance Calculation from Collections:', {
+          today,
+          todayLoanCollections: todayLoanCollections.length,
+          todaySavingCollections: todaySavingCollections.length,
+          todayLoanAmount,
+          todaySavingAmount,
+          totalTodayAmount: todayLoanAmount + todaySavingAmount,
+          totalTodayCount: todayLoanCollections.length + todaySavingCollections.length
+        });
+        
+      setTodayStats({
+          todayAmount: todayLoanAmount + todaySavingAmount,
+          todayLoans: todayLoanAmount,
+          todaySavings: todaySavingAmount,
+          todayCount: todayLoanCollections.length + todaySavingCollections.length
+        });
+      } else {
+        // Use officer model fields (preferred method)
+        // Calculate counts from collections data
+          const today = new Date().toISOString().split('T')[0];
+        
+        // Get today's loan collections count
+        const todayLoanCollections = allDailyCollections.filter(collection => {
+          const collectionDate = new Date(collection.created_on).toISOString().split('T')[0];
+          const isToday = collectionDate === today;
+          const isOfficerCollection = collection.collected_by === user._id;
+          
+          console.log('🔍 Loan Collection Filter Debug:', {
+            collectionId: collection._id,
+            createdOn: collection.created_on,
+            collectionDate,
+            today,
+            isToday,
+            collectedBy: collection.collected_by,
+            officerId: user._id,
+            isOfficerCollection,
+            amount: collection.collected_amount
+          });
+          
+          return isToday && isOfficerCollection;
+        });
+        
+        // Get today's saving collections count
+        let todaySavingCollections = [];
+        try {
+          const savingResponse = await axios.get(`/savingDailyCollections/getAllSavings`);
+          const allSavingCollections = savingResponse.data?.result || [];
+          
+          console.log('🔍 All Saving Collections Debug:', {
+            totalSavingCollections: allSavingCollections.length,
+            sampleSavingCollection: allSavingCollections[0],
+            today,
+            officerId: user._id
+          });
+          
+          todaySavingCollections = allSavingCollections.filter(collection => {
+            const collectionDate = new Date(collection.created_on).toISOString().split('T')[0];
+            const isToday = collectionDate === today;
+            const isOfficerCollection = collection.collected_by === user._id;
+            
+            console.log('🔍 Saving Collection Filter Debug:', {
+              collectionId: collection._id,
+              createdOn: collection.created_on,
+              collectionDate,
+              today,
+              isToday,
+              collectedBy: collection.collected_by,
+              officerId: user._id,
+              isOfficerCollection,
+              depositAmount: collection.deposit_amount
+            });
+            
+            return isToday && isOfficerCollection;
+          });
+        } catch (savingError) {
+          console.warn('Could not fetch today\'s saving collections for count:', savingError);
+        }
+        
+        const todayLoanCount = todayLoanCollections.length;
+        const todaySavingCount = todaySavingCollections.length;
+        const totalTodayCount = todayLoanCount + todaySavingCount;
+        
+        console.log('📊 Today\'s Counts from Collections:', {
+          todayLoanCount,
+          todaySavingCount,
+          totalTodayCount,
+          todayLoanAmount: officerTodayLoanAmount,
+          todaySavingAmount: officerTodaySavingAmount
+        });
+        
+        // Fallback: If counts are 0, try to get counts from officer's user_collections
+        let finalLoanCount = todayLoanCount;
+        let finalSavingCount = todaySavingCount;
+        
+        if (todayLoanCount === 0 && todaySavingCount === 0) {
+          console.log('🔄 No collections found via API, trying user_collections fallback...');
+          
+          const today = new Date().toISOString().split('T')[0];
+          const userCollections = officerData.user_collections || [];
+          
+          const todayUserCollections = userCollections.filter(collection => {
+            if (!collection.collected_on) return false;
+            const collectionDate = new Date(collection.collected_on).toISOString().split('T')[0];
+            return collectionDate === today;
+          });
+          
+          const loanCollections = todayUserCollections.filter(c => c.account_type === 'loan account');
+          const savingCollections = todayUserCollections.filter(c => c.account_type === 'saving account');
+          
+          finalLoanCount = loanCollections.length;
+          finalSavingCount = savingCollections.length;
+          
+          console.log('📊 Fallback Counts from user_collections:', {
+            totalUserCollections: userCollections.length,
+            todayUserCollections: todayUserCollections.length,
+            loanCollections: finalLoanCount,
+            savingCollections: finalSavingCount
+          });
+        }
+        
+        // Calculate today's actual collection amounts from the collections data
+        const apiLoanAmount = todayLoanCollections.reduce((sum, collection) => sum + (collection.collected_amount || 0), 0);
+        const apiSavingAmount = todaySavingCollections.reduce((sum, collection) => sum + (collection.deposit_amount || 0), 0);
+        let actualTodayAmount = apiLoanAmount + apiSavingAmount;
+        
+        // If no amount from API collections, try user_collections fallback
+        if (actualTodayAmount === 0) {
+          console.log('🔄 No amount from API collections, trying user_collections fallback...');
+          
+          const today = new Date().toISOString().split('T')[0];
+          const userCollections = officerData.user_collections || [];
+          
+          const todayUserCollections = userCollections.filter(collection => {
+            if (!collection.collected_on) return false;
+            const collectionDate = new Date(collection.collected_on).toISOString().split('T')[0];
+            return collectionDate === today;
+          });
+          
+          const loanAmount = todayUserCollections
+            .filter(c => c.account_type === 'loan account')
+            .reduce((sum, c) => sum + (c.collected_amount || 0), 0);
+          
+          const savingAmount = todayUserCollections
+            .filter(c => c.account_type === 'saving account')
+            .reduce((sum, c) => sum + (c.deposit_amount || 0), 0);
+          
+          actualTodayAmount = loanAmount + savingAmount;
+          
+          console.log('💰 Fallback Amount Calculation from user_collections:', {
+            loanAmount,
+            savingAmount,
+            actualTodayAmount,
+            totalUserCollections: userCollections.length,
+            todayUserCollections: todayUserCollections.length
+          });
+        }
+        
+        console.log('💰 Today\'s Amount Calculation:', {
+          apiLoanAmount,
+          apiSavingAmount,
+          actualTodayAmount,
+          officerModelAmount: officerTodayLoanAmount + officerTodaySavingAmount,
+          usingActualAmount: actualTodayAmount > 0
+        });
+        
+        // Calculate amounts for loan and saving cards
+        const cardLoanAmount = todayLoanCollections.reduce((sum, collection) => sum + (collection.collected_amount || 0), 0);
+        const cardSavingAmount = todaySavingCollections.reduce((sum, collection) => sum + (collection.deposit_amount || 0), 0);
+        
+        // If no amounts from API collections, try user_collections fallback
+        let finalLoanAmount = cardLoanAmount;
+        let finalSavingAmount = cardSavingAmount;
+        
+        if (cardLoanAmount === 0 && cardSavingAmount === 0) {
+          console.log('🔄 No amounts from API collections, trying user_collections fallback...');
+          
+          const today = new Date().toISOString().split('T')[0];
+          const userCollections = officerData.user_collections || [];
+          
+          const todayUserCollections = userCollections.filter(collection => {
+            if (!collection.collected_on) return false;
+            const collectionDate = new Date(collection.collected_on).toISOString().split('T')[0];
+            return collectionDate === today;
+          });
+          
+          finalLoanAmount = todayUserCollections
+            .filter(c => c.account_type === 'loan account')
+            .reduce((sum, c) => sum + (c.collected_amount || 0), 0);
+          
+          finalSavingAmount = todayUserCollections
+            .filter(c => c.account_type === 'saving account')
+            .reduce((sum, c) => sum + (c.deposit_amount || 0), 0);
+          
+          console.log('💰 Fallback Amount Calculation from user_collections:', {
+            loanAmount: finalLoanAmount,
+            savingAmount: finalSavingAmount,
+            totalAmount: finalLoanAmount + finalSavingAmount
+          });
+        }
+        
+        const totalTodayAmount = finalLoanAmount + finalSavingAmount;
+        
+        console.log('💰 Final Amount Calculation:', {
+          loanAmount: finalLoanAmount,
+          savingAmount: finalSavingAmount,
+          totalAmount: totalTodayAmount,
+          officerModelAmount: officerTodayLoanAmount + officerTodaySavingAmount
+        });
+        
+        setTodayStats({
+          todayAmount: totalTodayAmount > 0 ? totalTodayAmount : (officerTodayLoanAmount + officerTodaySavingAmount),
+          todayLoans: finalLoanAmount, // Amount, not count
+          todaySavings: finalSavingAmount, // Amount, not count
+          todayCount: finalLoanCount + finalSavingCount // Total count (for reference)
+        });
+      }
       
       // Set daily collections from user_collections array1
       const collections = officerData.user_collections || [];
@@ -89,6 +396,18 @@ const CollectionOfficerDashboard = () => {
         if (!collection || !collection.collected_on) return;
         
         const date = new Date(collection.collected_on).toISOString().split('T')[0];
+        
+        // Debug: Log the date conversion
+        console.log('🔍 Collection Date Debug:', {
+          originalDate: collection.collected_on,
+          parsedDate: date,
+          formattedDate: new Date(collection.collected_on).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          })
+        });
+        
         if (!groupedCollections[date]) {
           groupedCollections[date] = {
             date,
@@ -113,33 +432,142 @@ const CollectionOfficerDashboard = () => {
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 10); // Get last 10 days
       
+      console.log('📊 Daily Collections Array:', dailyCollectionsArray);
+      
       setDailyCollections(dailyCollectionsArray);
       
-      // Set assigned users from user_collections
-      const users = officerData.user_collections || [];
-      const uniqueUsers = users.reduce((acc, collection) => {
-        // Add null checks for collection properties
-        if (!collection || !collection.user_id) return acc;
-        
-        const existingUser = acc.find(u => u.user_id === collection.user_id);
-        if (!existingUser) {
-          acc.push({
-            user_id: collection.user_id,
-            name: collection.name || 'Unknown User',
-            phone_number: collection.phone_number || 'No phone',
-            account_type: collection.account_type || 'unknown',
-            last_collected_amount: collection.collected_amount || 0,
-            last_collected_on: collection.collected_on || new Date().toISOString(),
-            total_collections: users.filter(c => c && c.user_id === collection.user_id).length,
-            total_collected: users
-              .filter(c => c && c.user_id === collection.user_id)
-              .reduce((sum, c) => sum + (c.collected_amount || 0), 0)
-          });
-        }
-        return acc;
-      }, []);
+      // Fetch all users from users API
+      const usersResponse = await axios.get('/users');
+      const allUsers = usersResponse.data.result || [];
+      console.log('🔍 All users fetched:', allUsers.length);
       
-      setAssignedUsers(uniqueUsers);
+      // Filter users assigned to this officer  
+      const assignedUsers = allUsers.filter(userRecord => 
+        userRecord.officer_id && userRecord.officer_id._id === user._id
+      );
+      console.log('🔍 Users assigned to this officer:', assignedUsers.length);
+      console.log('🔍 Assigned users details:', assignedUsers.map(u => ({
+        userId: u._id,
+        name: u.full_name,
+        accountType: u.account_type,
+        phone: u.phone_number,
+        officerId: u.officer_id?._id
+      })));
+      
+      // Fetch saving collections data for each user individually
+      const savingCollectionsPromises = assignedUsers.map(async (user) => {
+        try {
+          const response = await axios.get(`/savingDailyCollections/${user._id}`);
+          return response.data.result;
+        } catch (error) {
+          console.log(`No saving data found for user ${user._id}:`, error.response?.data?.message || error.message);
+          return null;
+        }
+      });
+      
+      const savingCollectionsResults = await Promise.all(savingCollectionsPromises);
+      const savingCollections = savingCollectionsResults.filter(result => result !== null);
+      console.log('🔍 Saving collections fetched for users:', savingCollections.length);
+      
+      console.log('🔍 Assigned users found:', assignedUsers.length);
+      console.log('🔍 Assigned users details:', assignedUsers.map(u => ({
+        userId: u._id,
+        name: u.full_name,
+        accountType: u.account_type
+      })));
+      
+      // Transform users to match our table structure
+      const finalUsers = assignedUsers.map(userRecord => {
+        // Since we're getting data from users API, we need to fetch account details separately
+        const accountType = userRecord.account_type;
+        let accountData = {};
+        
+        if (accountType === 'loan account' && userRecord.active_loan_id) {
+          accountData = {
+            // Original amounts from when user was created
+            principal_amount: userRecord.active_loan_id.principle_amount || 0,
+            original_total_amount: userRecord.active_loan_id.loan_amount || 0,
+            original_total_due: userRecord.active_loan_id.total_amount || 0, // Original total with interest
+            // Current amounts (remaining to be paid)
+            current_total_amount: userRecord.active_loan_id.total_amount || 0, // Current total amount
+            current_total_due: userRecord.active_loan_id.total_due_amount || 0, // Current remaining amount
+            remaining_emi_days: userRecord.active_loan_id.remaining_emi_days || 0,
+            end_date: userRecord.active_loan_id.end_date,
+            start_date: userRecord.active_loan_id.created_on,
+            emi_day: userRecord.active_loan_id.emi_day || 0
+          };
+        } else if (accountType === 'saving account' && userRecord.saving_account_id) {
+          accountData = {
+            // For saving accounts, the original amount is the amount_to_be
+            principal_amount: userRecord.saving_account_id.amount_to_be || 0,
+            original_total_amount: userRecord.saving_account_id.amount_to_be || 0,
+            original_total_due: userRecord.saving_account_id.amount_to_be || 0, // Original target amount
+            // Current amounts (remaining to be saved)
+            current_total_amount: userRecord.saving_account_id.amount_to_be || 0, // Current target amount
+            current_total_due: userRecord.saving_account_id.amount_to_be - (userRecord.saving_account_id.current_amount || 0), // Remaining amount to save
+            remaining_emi_days: userRecord.saving_account_id.remaining_emi_days || 0,
+            end_date: userRecord.saving_account_id.end_date,
+            start_date: userRecord.saving_account_id.created_on,
+            emi_day: userRecord.saving_account_id.emi_day || 0
+          };
+        }
+        
+        // Extract account data - use correct amounts for display
+        const principalAmount = parseFloat(accountData.principal_amount) || 0;
+        const originalTotalAmount = parseFloat(accountData.original_total_amount) || 0;
+        const originalTotalDue = parseFloat(accountData.original_total_due) || 0; // Original total with interest
+        const currentTotalAmount = parseFloat(accountData.current_total_amount) || 0; // Current total amount
+        const currentTotalDueAmount = parseFloat(accountData.current_total_due) || 0; // Current remaining amount
+        const remainingEmiDays = parseFloat(accountData.remaining_emi_days) || 0;
+        const endDate = accountData.end_date;
+        const startDate = accountData.start_date;
+        const emiDay = accountData.emi_day || 0;
+        
+        // Calculate daily EMI amount using original total amount
+        const dailyEmiAmount = emiDay || (originalTotalAmount > 0 && remainingEmiDays > 0 ? Math.ceil(originalTotalAmount / remainingEmiDays) : 0);
+        
+        // Default values for collections (will be updated with actual data if available)
+        const penalty = 0;
+        const collectedAmount = 0;
+        const collectedOn = null;
+        const status = 'Active';
+        
+        return {
+          user_id: userRecord._id,
+          name: userRecord.full_name || 'Unknown User',
+          phone_number: userRecord.phone_number || 'No phone',
+          address: userRecord.address || 'No address',
+          pan_no: 'No PAN', // Not available in users API
+          // Financial data from loan/saving account
+          account_type: accountType,
+          // Original amounts (fixed from when user was created)
+          principal_amount: principalAmount,
+          total_amount: originalTotalAmount, // Original total amount
+          total_due_amount: originalTotalDue, // Original total with interest
+          // Current amounts (remaining to be paid/saved)
+          current_total_amount: currentTotalAmount, // Current total amount
+          current_total_due_amount: currentTotalDueAmount, // Current remaining amount
+          current_amount: currentTotalAmount - currentTotalDueAmount, // Amount already paid/saved
+          total_with_interest: originalTotalDue, // Original total with interest
+          interest_amount: originalTotalDue - principalAmount, // Interest amount
+          emi_day: dailyEmiAmount,
+          remaining_emi_days: remainingEmiDays,
+          start_date: startDate,
+          end_date: endDate,
+          penalty: penalty,
+          status: status,
+          // Additional user information
+          created_on: startDate,
+          updated_on: collectedOn,
+          // Collection statistics (defaults for now)
+          total_collections: 0,
+          last_collected_amount: 0,
+          last_collected_on: collectedOn
+        };
+      });
+      
+      console.log('✅ Final users with collection data:', finalUsers);
+      setAssignedUsers(finalUsers);
       
     } catch (error) {
       console.error('Error fetching officer data:', error);
@@ -171,6 +599,27 @@ const CollectionOfficerDashboard = () => {
       month: 'short',
       year: 'numeric'
     });
+  };
+
+  const handleViewUser = (assignedUser) => {
+    console.log('🔍 View User Clicked:', assignedUser);
+    if (assignedUser?.account_type === 'loan account') {
+      console.log('📋 Navigating to loan view:', `/officer/viewLoan/${assignedUser.user_id}`);
+      navigate(`/officer/viewLoan/${assignedUser.user_id}`);
+    } else if (assignedUser?.account_type === 'saving account') {
+      console.log('💰 Navigating to saving view:', `/officer/viewSaving/${assignedUser.user_id}`);
+      navigate(`/officer/viewSaving/${assignedUser.user_id}`);
+    } else {
+      console.log('❌ Unknown account type:', assignedUser?.account_type);
+      toast({
+        title: "Error",
+        description: "Unknown account type",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+    }
   };
 
   // Show loading state while authentication is loading or user data is not available
@@ -225,7 +674,7 @@ const CollectionOfficerDashboard = () => {
         <Text fontSize="xl" fontWeight="semibold" mb={4} color="gray.700">
           Today's Performance
         </Text>
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6} mb={8}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6} mb={8}>
           <Card bg="white" shadow="md" borderRadius="lg">
             <CardBody p={6}>
               <VStack spacing={2}>
@@ -242,21 +691,8 @@ const CollectionOfficerDashboard = () => {
           <Card bg="white" shadow="md" borderRadius="lg">
             <CardBody p={6}>
               <VStack spacing={2}>
-                <Text fontSize="2xl" fontWeight="bold" color="blue.500">
-                  {todayStats.todayCount}
-                </Text>
-                <Text fontSize="sm" color="gray.600" textAlign="center">
-                  Total Collections
-                </Text>
-              </VStack>
-            </CardBody>
-          </Card>
-
-          <Card bg="white" shadow="md" borderRadius="lg">
-            <CardBody p={6}>
-              <VStack spacing={2}>
                 <Text fontSize="2xl" fontWeight="bold" color="purple.500">
-                  {todayStats.todayLoans}
+                  {formatCurrency(todayStats.todayLoans)}
                 </Text>
                 <Text fontSize="sm" color="gray.600" textAlign="center">
                   Loan Collections
@@ -269,7 +705,7 @@ const CollectionOfficerDashboard = () => {
             <CardBody p={6}>
               <VStack spacing={2}>
                 <Text fontSize="2xl" fontWeight="bold" color="orange.500">
-                  {todayStats.todaySavings}
+                  {formatCurrency(todayStats.todaySavings)}
                 </Text>
                 <Text fontSize="sm" color="gray.600" textAlign="center">
                   Saving Collections
@@ -445,57 +881,188 @@ const CollectionOfficerDashboard = () => {
         <Card bg="white" shadow="md" borderRadius="lg">
           <CardBody p={6}>
             {assignedUsers.length > 0 ? (
-              <VStack spacing={4} align="stretch">
-                {assignedUsers.map((assignedUser, index) => (
-                  <motion.div
-                    key={assignedUser?.user_id || index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                  >
-                    <HStack 
-                      justify="space-between" 
-                      p={4} 
-                      bg="gray.50" 
-                      borderRadius="md"
-                      _hover={{ bg: "gray.100", cursor: "pointer" }}
-                    >
-                      <VStack align="start" spacing={1}>
-                        <HStack spacing={3}>
-                          <Text fontWeight="semibold" color="gray.800">
-                            {assignedUser?.name || 'Unknown User'}
-                          </Text>
+              <TableContainer overflowX="auto">
+                <Table variant="simple" size="sm" minW="1800px">
+                  <Thead>
+                    <Tr>
+                      <Th>User Details</Th>
+                      <Th>Account Type</Th>
+                      <Th>Status</Th>
+                      <Th>Principal Amount</Th>
+                      <Th>Total with Interest</Th>
+                      <Th>Current Amount</Th>
+                      <Th>Remaining Amount</Th>
+                      <Th>Daily EMI Amount</Th>
+                      <Th>Remaining EMI Days</Th>
+                      <Th>Start Date</Th>
+                      <Th>End Date</Th>
+                      <Th>Penalty</Th>
+                      <Th>Last Collection</Th>
+                      <Th>Actions</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {assignedUsers.map((assignedUser, index) => (
+                      <motion.tr
+                        key={assignedUser?.user_id || index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: index * 0.1 }}
+                        _hover={{ bg: "gray.50" }}
+                      >
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontWeight="semibold" color="gray.800" fontSize="sm">
+                              {assignedUser?.name || 'Unknown User'}
+                            </Text>
+                            <Text fontSize="xs" color="gray.600">
+                              📞 {assignedUser?.phone_number || 'No phone'}
+                            </Text>
+                            <Text fontSize="xs" color="gray.500" maxW="150px" isTruncated>
+                              📍 {assignedUser?.address || 'No address'}
+                            </Text>
+                          </VStack>
+                        </Td>
+                        <Td>
                           <Badge 
                             colorScheme={assignedUser?.account_type === 'loan account' ? 'blue' : 'green'}
                             fontSize="xs"
+                            px={2}
+                            py={1}
                           >
                             {assignedUser?.account_type === 'loan account' ? 'Loan' : 'Saving'}
                           </Badge>
-                        </HStack>
-                        <Text fontSize="sm" color="gray.600">
-                          {assignedUser?.phone_number || 'No phone'}
-                        </Text>
-                        <Text fontSize="xs" color="gray.500">
-                          {assignedUser?.total_collections || 0} collections • Last: {assignedUser?.last_collected_on ? formatDate(assignedUser.last_collected_on) : 'N/A'}
-                        </Text>
-                      </VStack>
-                      <VStack align="end" spacing={1}>
-                        <Text fontWeight="bold" color="green.600">
-                          {formatCurrency(assignedUser?.total_collected || 0)}
-                        </Text>
-                        <Text fontSize="sm" color="gray.500">
-                          Total Collected
-                        </Text>
-                        {(assignedUser?.last_collected_amount || 0) > 0 && (
-                          <Text fontSize="xs" color="blue.600">
-                            Last: {formatCurrency(assignedUser.last_collected_amount)}
+                        </Td>
+                        <Td>
+                          <Badge 
+                            colorScheme={
+                              assignedUser?.status === 'Active' ? 'green' : 
+                              assignedUser?.status === 'Overdue' ? 'red' : 
+                              assignedUser?.status === 'Completed' ? 'blue' : 'gray'
+                            }
+                            fontSize="xs"
+                            px={2}
+                            py={1}
+                          >
+                            {assignedUser?.status || 'Unknown'}
+                          </Badge>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontWeight="semibold" color="blue.600" fontSize="sm">
+                              {formatCurrency(assignedUser?.principal_amount || 0)}
+                            </Text>
+                            <Text fontSize="xs" color="gray.500">
+                              (principal)
+                            </Text>
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontWeight="semibold" color="green.600" fontSize="sm">
+                              {formatCurrency(assignedUser?.total_due_amount || 0)}
+                            </Text>
+                            <Text fontSize="xs" color="gray.500">
+                              (with interest)
+                            </Text>
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontWeight="semibold" color="purple.600" fontSize="sm">
+                              {formatCurrency(assignedUser?.current_amount || 0)}
+                            </Text>
+                            <Text fontSize="xs" color="gray.500">
+                              (paid/saved)
+                            </Text>
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontWeight="semibold" color="red.600" fontSize="sm">
+                              {formatCurrency(assignedUser?.current_total_due_amount || 0)}
+                            </Text>
+                            <Text fontSize="xs" color="gray.500">
+                              (remaining)
+                            </Text>
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <Text fontWeight="semibold" color="green.600" fontSize="sm">
+                            {formatCurrency(assignedUser?.emi_day || 0)}
                           </Text>
-                        )}
-                      </VStack>
-                    </HStack>
-                  </motion.div>
-                ))}
-              </VStack>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontSize="sm" color="gray.700" fontWeight="semibold">
+                              {assignedUser?.remaining_emi_days || 0} days
+                            </Text>
+                            {assignedUser?.remaining_emi_days > 0 && (
+                              <Box 
+                                w="60px" 
+                                h="4px" 
+                                bg="gray.200" 
+                                borderRadius="2px"
+                                overflow="hidden"
+                              >
+                                <Box 
+                                  h="100%" 
+                                  bg={assignedUser.remaining_emi_days > 30 ? "green.400" : assignedUser.remaining_emi_days > 10 ? "yellow.400" : "red.400"}
+                                  w={`${Math.max(0, Math.min(100, ((120 - assignedUser.remaining_emi_days) / 120) * 100))}%`}
+                                  transition="width 0.3s ease"
+                                />
+                              </Box>
+                            )}
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontSize="xs" color="gray.700" fontWeight="semibold">
+                              {assignedUser?.start_date ? formatDate(assignedUser.start_date) : 'N/A'}
+                            </Text>
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontSize="xs" color="gray.700" fontWeight="semibold">
+                              {assignedUser?.end_date ? formatDate(assignedUser.end_date) : 'N/A'}
+                            </Text>
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <Text fontWeight="semibold" color="orange.600" fontSize="sm">
+                            {formatCurrency(assignedUser?.penalty || 0)}
+                          </Text>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontSize="xs" color="gray.700">
+                              {assignedUser?.last_collected_on ? formatDate(assignedUser.last_collected_on) : 'N/A'}
+                            </Text>
+                            {(assignedUser?.last_collected_amount || 0) > 0 && (
+                              <Text fontSize="xs" color="green.600" fontWeight="semibold">
+                                {formatCurrency(assignedUser.last_collected_amount)}
+                              </Text>
+                            )}
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <Tooltip label="View User Details" placement="top">
+                            <IconButton
+                              aria-label="View User"
+                              icon={<ViewIcon />}
+                              size="sm"
+                              colorScheme="blue"
+                              variant="outline"
+                              onClick={() => handleViewUser(assignedUser)}
+                            />
+                          </Tooltip>
+                        </Td>
+                      </motion.tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TableContainer>
             ) : (
               <Center py={8}>
                 <VStack spacing={4}>
