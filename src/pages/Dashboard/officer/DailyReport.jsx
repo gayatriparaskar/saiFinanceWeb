@@ -61,6 +61,7 @@ import { FiCalendar, FiDollarSign, FiUsers, FiTrendingUp, FiSearch, FiDownload, 
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import axios from '../../../axios';
+import { updateOfficerCollectionData } from '../../../services/officerService';
 
 const DailyReport = () => {
   const { user } = useAuth();
@@ -112,6 +113,39 @@ const DailyReport = () => {
     setIsPaymentModalOpen(true);
   };
 
+  // Handle payment process update via officer API
+  const handlePaymentProcessUpdate = async (processType) => {
+    try {
+      console.log('🔄 Updating payment process for officer:', user._id, 'to:', processType);
+      
+      await updateOfficerCollectionData(user._id, {
+        paymentProcess: processType
+      });
+      
+      console.log('✅ Payment process updated successfully');
+      
+      toast({
+        title: 'Success',
+        description: `Payment process updated to ${processType} successfully`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      
+      // Refresh the report
+      fetchDailyReport();
+    } catch (error) {
+      console.error('❌ Error updating payment process:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update payment process. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   const handleAssignSubmit = async () => {
     if (totalCollections === 0) {
       toast({
@@ -125,6 +159,12 @@ const DailyReport = () => {
     }
 
     try {
+      // Update officer's assignTo and paymentProcess fields
+      await updateOfficerCollectionData(user._id, {
+        assignTo: 'manager',
+        paymentProcess: 'manager'
+      });
+
       // Call the API to assign daily collections to manager for review
       const payload = {
         officer_id: user._id,
@@ -147,7 +187,11 @@ const DailyReport = () => {
       
       setIsAssignModalOpen(false);
       setAssignRole('');
+      
+      // Refresh the report
+      fetchDailyReport();
     } catch (error) {
+      console.error('Error assigning collections:', error);
       toast({
         title: 'Error',
         description: 'Failed to assign collections to Manager for review',
@@ -171,18 +215,19 @@ const DailyReport = () => {
     }
 
     try {
-      // Here you would call the appropriate payment API based on process type
-      // const payload = {
-      //   amount: paymentAmount,
-      //   user_id: selectedUser,
-      //   payment_type: paymentType,
-      //   process_type: paymentProcessType
-      // };
-      // await axios.post('/processPayment', payload);
+      // Update officer's payment process based on the selected type
+      let processType = paymentProcessType;
+      if (paymentProcessType === 'deposit_to_bank') {
+        processType = 'deposite to bank';
+      }
+      
+      await updateOfficerCollectionData(user._id, {
+        paymentProcess: processType
+      });
       
       toast({
         title: 'Success',
-        description: `Payment processed through ${paymentProcessType} successfully`,
+        description: `Payment process updated to ${paymentProcessType} successfully`,
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -192,9 +237,11 @@ const DailyReport = () => {
       setSelectedUser('');
       setPaymentAmount('');
       setPaymentProcessType('');
+      
       // Refresh the report
       fetchDailyReport();
     } catch (error) {
+      console.error('Error processing payment:', error);
       toast({
         title: 'Error',
         description: 'Failed to process payment',
@@ -546,6 +593,11 @@ const DailyReport = () => {
                   📅 Today's Report
                 </Text>
               )}
+              {reportData?.officer?.paymentProcess && (
+                <Text color="blue.600" fontSize="sm" fontWeight="semibold">
+                  🔄 Payment Process: {reportData.officer.paymentProcess}
+                </Text>
+              )}
             </VStack>
             <HStack spacing={3}>
               <InputGroup maxW="200px">
@@ -590,11 +642,20 @@ const DailyReport = () => {
                   Payment Process
                 </MenuButton>
                 <MenuList>
-                  <MenuItem onClick={() => handlePaymentProcess('manager')}>
+                  <MenuItem onClick={() => handlePaymentProcessUpdate('manager')}>
                     Manager
                   </MenuItem>
-                  <MenuItem onClick={() => handlePaymentProcess('deposit_to_bank')}>
+                  <MenuItem onClick={() => handlePaymentProcessUpdate('deposite to bank')}>
                     Deposit to Bank
+                  </MenuItem>
+                  <MenuItem onClick={() => handlePaymentProcessUpdate('accounter')}>
+                    Accounter
+                  </MenuItem>
+                  <MenuItem onClick={() => handlePaymentProcessUpdate('reassign to officer')}>
+                    Reassign to Officer
+                  </MenuItem>
+                  <MenuItem onClick={() => handlePaymentProcessUpdate('process complete')}>
+                    Process Complete
                   </MenuItem>
                 </MenuList>
               </Menu>

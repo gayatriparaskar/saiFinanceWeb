@@ -477,7 +477,7 @@ const CollectionOfficerDashboard = () => {
       })));
       
       // Transform users to match our table structure
-      const finalUsers = assignedUsers.map(userRecord => {
+      const finalUsers = await Promise.all(assignedUsers.map(async (userRecord) => {
         // Since we're getting data from users API, we need to fetch account details separately
         const accountType = userRecord.account_type;
         let accountData = {};
@@ -526,10 +526,47 @@ const CollectionOfficerDashboard = () => {
         // Calculate daily EMI amount using original total amount
         const dailyEmiAmount = emiDay || (originalTotalAmount > 0 && remainingEmiDays > 0 ? Math.ceil(originalTotalAmount / remainingEmiDays) : 0);
         
-        // Default values for collections (will be updated with actual data if available)
-        const penalty = 0;
-        const collectedAmount = 0;
-        const collectedOn = null;
+        // Fetch collection data for this user
+        let lastCollectedOn = null;
+        let lastCollectedAmount = 0;
+        let totalCollections = 0;
+        let penalty = 0;
+        
+        try {
+          if (accountType === 'loan account') {
+            // Fetch loan collections
+            const loanCollectionsResponse = await axios.get(`/dailyCollections/${userRecord._id}`);
+            const loanCollections = loanCollectionsResponse.data?.result || [];
+            
+            if (loanCollections.length > 0) {
+              // Sort by date to get the most recent collection
+              const sortedCollections = loanCollections.sort((a, b) => new Date(b.created_on) - new Date(a.created_on));
+              const lastCollection = sortedCollections[0];
+              
+              lastCollectedOn = lastCollection.created_on;
+              lastCollectedAmount = lastCollection.amount || 0;
+              totalCollections = loanCollections.length;
+              penalty = lastCollection.total_penalty_amount || 0;
+            }
+          } else if (accountType === 'saving account') {
+            // Fetch saving collections
+            const savingCollectionsResponse = await axios.get(`/savingDailyCollections/${userRecord._id}`);
+            const savingCollections = savingCollectionsResponse.data?.result?.collections || [];
+            
+            if (savingCollections.length > 0) {
+              // Sort by date to get the most recent collection
+              const sortedCollections = savingCollections.sort((a, b) => new Date(b.created_on) - new Date(a.created_on));
+              const lastCollection = sortedCollections[0];
+              
+              lastCollectedOn = lastCollection.created_on;
+              lastCollectedAmount = (lastCollection.deposit_amount || 0) + (lastCollection.withdraw_amount || 0);
+              totalCollections = savingCollections.length;
+            }
+          }
+        } catch (error) {
+          console.log(`No collection data found for user ${userRecord._id}:`, error.response?.data?.message || error.message);
+        }
+        
         const status = 'Active';
         
         return {
@@ -558,13 +595,13 @@ const CollectionOfficerDashboard = () => {
           status: status,
           // Additional user information
           created_on: startDate,
-          updated_on: collectedOn,
-          // Collection statistics (defaults for now)
-          total_collections: 0,
-          last_collected_amount: 0,
-          last_collected_on: collectedOn
+          updated_on: lastCollectedOn,
+          // Collection statistics (now with actual data)
+          total_collections: totalCollections,
+          last_collected_amount: lastCollectedAmount,
+          last_collected_on: lastCollectedOn
         };
-      });
+      }));
       
       console.log('✅ Final users with collection data:', finalUsers);
       setAssignedUsers(finalUsers);
