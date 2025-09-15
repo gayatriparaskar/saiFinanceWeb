@@ -22,6 +22,7 @@ instance.interceptors.request.use(
     const token = localStorage.getItem("token");
     console.log("Making request to:", config.baseURL + config.url);
     console.log("Token:", token ? "Present" : "Not present");
+    console.log("API Base URL:", API_BASE_URL);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
