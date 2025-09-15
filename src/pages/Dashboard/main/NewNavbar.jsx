@@ -5,7 +5,9 @@ import { useAuth } from "../../../contexts/AuthContext";
 
 import { IoMdLogOut } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
-import { FiGlobe } from "react-icons/fi";
+import { FiGlobe, FiKey } from "react-icons/fi";
+import PasswordChangeModal from "../../../components/PasswordChangeModal";
+import { changeUserPassword } from "../../../services/userService";
 
 import Logo from "../../../Images/Sai-finance-logo.png"
 // import axios from "../../axios";
@@ -19,6 +21,10 @@ const NewNavbar = () => {
   // const [openDropdown, setOpenDropdown] = useState(null);
   const [isMenuOpen2, setIsMenuOpen2] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language || 'en');
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+  const [passwordChangeError, setPasswordChangeError] = useState('');
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState('');
 
   const [profile, setProfile] = useState([]);
   const dropdownRef = useRef(null);
@@ -72,6 +78,36 @@ const NewNavbar = () => {
     localStorage.setItem('language', lang);
   };
 
+  const handlePasswordChange = async (passwordData) => {
+    setPasswordChangeLoading(true);
+    setPasswordChangeError('');
+    setPasswordChangeSuccess('');
+
+    try {
+      await changeUserPassword(passwordData);
+      setPasswordChangeSuccess('Password changed successfully!');
+      setTimeout(() => {
+        setIsPasswordModalOpen(false);
+        setPasswordChangeSuccess('');
+      }, 2000);
+    } catch (error) {
+      console.error('Password change error:', error);
+      setPasswordChangeError(
+        error.response?.data?.message || 
+        error.message || 
+        'Failed to change password. Please try again.'
+      );
+    } finally {
+      setPasswordChangeLoading(false);
+    }
+  };
+
+  const handlePasswordModalClose = () => {
+    setIsPasswordModalOpen(false);
+    setPasswordChangeError('');
+    setPasswordChangeSuccess('');
+  };
+
   return (
     <nav className="w-full top-0 flex items-center justify-between bg-white p-4 shadow-lg fixed  z-50">
       {/* Logo */}
@@ -100,7 +136,7 @@ const NewNavbar = () => {
       {/* Profile Menu */}
       <div
         ref={dropdownRef}
-        className={`w-72 absolute z-50 right-4 top-16 bg-white shadow-xl border border-gray-200 rounded-2xl overflow-hidden ${isMenuOpen2 ? "" : "hidden"
+        className={`w-72 absolute z-50 right-4 top-16 bg-white shadow-xl border border-gray-200 rounded-2xl overflow-y-auto max-h-96 ${isMenuOpen2 ? "" : "hidden"
           }`}
         id="user-dropdown"
       >
@@ -153,6 +189,23 @@ const NewNavbar = () => {
           )}
         </div>
 
+        {/* Settings Section */}
+        <div className="border-t border-gray-100 p-4">
+          <div className="space-y-2">
+            {/* Password Change Button */}
+            <button
+              onClick={() => {
+                setIsPasswordModalOpen(true);
+                setIsMenuOpen2(false);
+              }}
+              className="w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+            >
+              <FiKey className="text-purple" size={18} />
+              <span className="text-sm font-medium">Change Password</span>
+            </button>
+          </div>
+        </div>
+
         {/* Language Selector */}
         <div className="border-t border-gray-100 p-4">
           <div className="flex items-center justify-center mb-3">
@@ -198,6 +251,16 @@ const NewNavbar = () => {
           </button>
         </div>
       </div>
+
+      {/* Password Change Modal */}
+      <PasswordChangeModal
+        isOpen={isPasswordModalOpen}
+        onClose={handlePasswordModalClose}
+        onSubmit={handlePasswordChange}
+        isLoading={passwordChangeLoading}
+        error={passwordChangeError}
+        success={passwordChangeSuccess}
+      />
     </nav>
   );
 };

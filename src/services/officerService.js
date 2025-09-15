@@ -93,3 +93,28 @@ export const assignOfficer = async (officerId, assignmentData) => {
     throw error;
   }
 };
+
+/**
+ * Change officer password
+ * @param {Object} passwordData - Password change data
+ * @param {string} passwordData.currentPassword - Current password
+ * @param {string} passwordData.newPassword - New password
+ * @returns {Promise<Object>} Success response
+ */
+export const changeOfficerPassword = async (passwordData) => {
+  try {
+    console.log('🔄 Changing officer password...');
+    
+    const response = await axios.put('officers/change-password', passwordData);
+    
+    if (response.data && response.data.message) {
+      console.log('✅ Officer password changed successfully');
+      return response.data;
+    } else {
+      throw new Error('Invalid response format');
+    }
+  } catch (error) {
+    console.error('❌ Error changing officer password:', error);
+    throw error;
+  }
+};

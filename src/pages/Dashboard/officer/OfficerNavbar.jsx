@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import { 
@@ -31,8 +31,11 @@ import {
   FiHome,
   FiUsers,
   FiCalendar,
-  FiBarChart2
+  FiBarChart2,
+  FiKey
 } from "react-icons/fi";
+import PasswordChangeModal from "../../../components/PasswordChangeModal";
+import { changeOfficerPassword } from "../../../services/officerService";
 import { motion } from "framer-motion";
 import Logo from "../../../Images/Sai-finance-logo.png";
 
@@ -40,6 +43,12 @@ const OfficerNavbar = () => {
   const { user, userRole, logout } = useAuth();
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  
+  // Password change modal state
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+  const [passwordChangeError, setPasswordChangeError] = useState('');
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState('');
 
   const handleLogout = async () => {
     try {
@@ -48,6 +57,36 @@ const OfficerNavbar = () => {
     } catch (error) {
       console.error('Logout error:', error);
     }
+  };
+
+  const handlePasswordChange = async (passwordData) => {
+    setPasswordChangeLoading(true);
+    setPasswordChangeError('');
+    setPasswordChangeSuccess('');
+
+    try {
+      await changeOfficerPassword(passwordData);
+      setPasswordChangeSuccess('Password changed successfully!');
+      setTimeout(() => {
+        setIsPasswordModalOpen(false);
+        setPasswordChangeSuccess('');
+      }, 2000);
+    } catch (error) {
+      console.error('Password change error:', error);
+      setPasswordChangeError(
+        error.response?.data?.message || 
+        error.message || 
+        'Failed to change password. Please try again.'
+      );
+    } finally {
+      setPasswordChangeLoading(false);
+    }
+  };
+
+  const handlePasswordModalClose = () => {
+    setIsPasswordModalOpen(false);
+    setPasswordChangeError('');
+    setPasswordChangeSuccess('');
   };
 
   const getRoleDisplayName = (role) => {
@@ -230,6 +269,15 @@ const OfficerNavbar = () => {
               </MenuButton>
               <MenuList>
                 <MenuItem 
+                  icon={<FiKey />} 
+                  onClick={() => {
+                    setIsPasswordModalOpen(true);
+                  }}
+                  color="blue.500"
+                >
+                  Change Password
+                </MenuItem>
+                <MenuItem 
                   icon={<IoMdLogOut />} 
                   onClick={handleLogout}
                   color="red.500"
@@ -371,8 +419,22 @@ const OfficerNavbar = () => {
                   )}
                 </VStack>
 
-                {/* Logout Button */}
-                <Box p={4} borderTop="1px" borderColor="gray.200">
+                {/* Settings and Logout Section */}
+                <Box p={4} borderTop="1px" borderColor="gray.200" space={2}>
+                  <Button
+                    variant="outline"
+                    leftIcon={<FiKey />}
+                    onClick={() => {
+                      setIsPasswordModalOpen(true);
+                      onClose();
+                    }}
+                    w="full"
+                    colorScheme="blue"
+                    size="lg"
+                    mb={2}
+                  >
+                    Change Password
+                  </Button>
                   <Button
                     variant="outline"
                     leftIcon={<IoMdLogOut />}
@@ -392,6 +454,16 @@ const OfficerNavbar = () => {
           </DrawerContent>
         </Drawer>
       </Box>
+
+      {/* Password Change Modal */}
+      <PasswordChangeModal
+        isOpen={isPasswordModalOpen}
+        onClose={handlePasswordModalClose}
+        onSubmit={handlePasswordChange}
+        isLoading={passwordChangeLoading}
+        error={passwordChangeError}
+        success={passwordChangeSuccess}
+      />
     </motion.div>
   );
 };
