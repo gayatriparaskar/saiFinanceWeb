@@ -903,7 +903,7 @@ const CollectionOfficerDashboard = () => {
       >
         <HStack justify="space-between" mb={4}>
           <Text fontSize="xl" fontWeight="semibold" color="gray.700">
-            Assigned Users ({assignedUsers.length})
+            Assigned Customers ({assignedUsers.length})
           </Text>
           <Button
             size="sm"

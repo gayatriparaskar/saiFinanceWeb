@@ -5,7 +5,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 
 import { IoMdLogOut } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
-import { FiGlobe, FiKey } from "react-icons/fi";
+import { FiGlobe, FiKey, FiMenu, FiHome, FiCalendar, FiBarChart2 } from "react-icons/fi";
 import PasswordChangeModal from "../../../components/PasswordChangeModal";
 import { changeUserPassword } from "../../../services/userService";
 
@@ -20,6 +20,7 @@ const NewNavbar = () => {
   const { i18n } = useTranslation();
   // const [openDropdown, setOpenDropdown] = useState(null);
   const [isMenuOpen2, setIsMenuOpen2] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language || 'en');
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
@@ -108,27 +109,70 @@ const NewNavbar = () => {
     setPasswordChangeSuccess('');
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <nav className="w-full top-0 flex items-center justify-between bg-white p-4 shadow-lg fixed  z-50">
+    <nav className="w-full top-0 flex items-center justify-between bg-white p-4 shadow-lg fixed z-50">
       {/* Logo */}
-      <div className="text-xl font-bold text-bgBlue  w-16">
+      <div className="text-xl font-bold text-bgBlue w-16">
         <img src={Logo} alt="" className="w-full" />
       </div>
 
-      {/* User Name in Center (All Devices) */}
-      <div className="flex-1 flex justify-center">
-        <h1 className="text-xl font-bold text-gray-800">
+      {/* Desktop Navigation Menu */}
+      <div className="hidden lg:flex items-center space-x-6 flex-1 justify-center">
+        <button
+          onClick={() => navigate('/dash/home')}
+          className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+        >
+          <FiHome size={18} />
+          <span>Dashboard</span>
+        </button>
+        
+        <button
+          onClick={() => navigate('/dash/daily-report')}
+          className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+        >
+          <FiCalendar size={18} />
+          <span>Daily Report</span>
+        </button>
+        
+        <button
+          onClick={() => navigate('/dash/weekly-report')}
+          className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+        >
+          <FiBarChart2 size={18} />
+          <span>Weekly Report</span>
+        </button>
+      </div>
+
+      {/* User Name in Center (Mobile Only) */}
+      <div className="lg:hidden flex-1 flex justify-center">
+        <h1 className="text-lg font-bold text-gray-800">
           {profile?.full_name || 'Welcome'}
         </h1>
       </div>
 
-      {/* Avatar & Logout */}
+      {/* Right Side Controls */}
       <div className="flex items-center gap-2">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={toggleMobileMenu}
+          className="lg:hidden flex items-center p-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
+        >
+          <FiMenu size={20} />
+        </button>
+
+        {/* Profile Button */}
         <button
           onClick={() => setIsMenuOpen2(!isMenuOpen2)}
-          className="flex  bg-purple rounded-xl p-1 text-white text-xl font-bold focus:ring-2 focus:ring-bgBlue dark:focus:ring-bgBlue mr-4"
+          className="flex bg-purple rounded-xl p-1 text-white text-xl font-bold focus:ring-2 focus:ring-bgBlue dark:focus:ring-bgBlue"
         >
-          {/* <IoSettings size={28} /> */}
           <CgProfile size={28} />
         </button>
       </div>
@@ -251,6 +295,55 @@ const NewNavbar = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-x-0 top-16 bg-white z-40 border-t border-gray-200 shadow-lg">
+          <div className="p-4 space-y-3">
+            {/* Mobile Navigation Items */}
+            <button
+              onClick={() => {
+                navigate('/dash/home');
+                closeMobileMenu();
+              }}
+              className="w-full flex items-center space-x-3 p-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+            >
+              <FiHome size={20} />
+              <span>Dashboard</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                navigate('/dash/daily-report');
+                closeMobileMenu();
+              }}
+              className="w-full flex items-center space-x-3 p-3 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+            >
+              <FiCalendar size={20} />
+              <span>Daily Report</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                navigate('/dash/weekly-report');
+                closeMobileMenu();
+              }}
+              className="w-full flex items-center space-x-3 p-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+            >
+              <FiBarChart2 size={20} />
+              <span>Weekly Report</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Menu Backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-25 z-30"
+          onClick={closeMobileMenu}
+        />
+      )}
 
       {/* Password Change Modal */}
       <PasswordChangeModal

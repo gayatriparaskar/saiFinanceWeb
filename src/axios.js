@@ -9,7 +9,7 @@ const API_BASE_URL = "https://saifinancebackend.onrender.com/api/";
 
 const instance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // 30 second timeout - increased for slow server responses
   headers: {
     "Content-Type": "application/json",
   },
@@ -35,13 +35,32 @@ instance.interceptors.request.use(
   }
 );
 
+// Retry configuration
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000; // 1 second
+
+// Function to retry requests
+const retryRequest = async (config, retryCount = 0) => {
+  if (retryCount >= MAX_RETRIES) {
+    throw new Error(`Request failed after ${MAX_RETRIES} retries`);
+  }
+  
+  // Wait before retrying
+  await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+  
+  console.log(`Retrying request (attempt ${retryCount + 1}/${MAX_RETRIES}):`, config.url);
+  return instance(config);
+};
+
 // Add response interceptor to handle network errors
 instance.interceptors.response.use(
   (response) => {
     console.log("Response received:", response.status, response.statusText);
     return response;
   },
-  (error) => {
+  async (error) => {
+    const config = error.config;
+    
     console.error("Network/Response Error Details:", JSON.stringify({
       message: error.message,
       code: error.code,
@@ -57,8 +76,30 @@ instance.interceptors.response.use(
     // Handle specific network errors
     if (error.code === 'ECONNABORTED') {
       console.error("Request timeout - server took too long to respond");
+      
+      // Retry timeout errors
+      if (config && !config._retryCount) {
+        config._retryCount = 0;
+      }
+      
+      if (config && config._retryCount < MAX_RETRIES) {
+        config._retryCount++;
+        console.log(`Retrying timeout request (attempt ${config._retryCount}/${MAX_RETRIES})`);
+        return retryRequest(config, config._retryCount - 1);
+      }
     } else if (error.message === 'Network Error') {
       console.error("Network connectivity issue - check CORS, server status, or internet connection");
+      
+      // Retry network errors
+      if (config && !config._retryCount) {
+        config._retryCount = 0;
+      }
+      
+      if (config && config._retryCount < MAX_RETRIES) {
+        config._retryCount++;
+        console.log(`Retrying network error request (attempt ${config._retryCount}/${MAX_RETRIES})`);
+        return retryRequest(config, config._retryCount - 1);
+      }
     }
 
     return Promise.reject(error);

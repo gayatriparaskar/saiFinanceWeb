@@ -571,7 +571,7 @@ const DailyReport = () => {
   });
 
   return (
-    <Box p={6} maxW="1400px" mx="auto">
+    <Box p={{ base: 4, md: 6 }} maxW="1400px" mx="auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -579,111 +579,134 @@ const DailyReport = () => {
       >
         {/* Header */}
         <VStack spacing={4} align="stretch" mb={8}>
-          <HStack justify="space-between" align="center">
+          {/* Mobile-first responsive header */}
+          <VStack spacing={4} align="stretch">
+            {/* Title and info section */}
             <VStack align="start" spacing={1}>
-              <Heading size="lg" color="green.600" display="flex" alignItems="center" gap={2}>
+              <Heading size={{ base: "md", md: "lg" }} color="green.600" display="flex" alignItems="center" gap={2}>
                 <FiCalendar />
                 Daily Report
               </Heading>
-              <Text color="gray.600">
+              <Text color="gray.600" fontSize={{ base: "sm", md: "md" }}>
                 Collection performance for {formatDate(selectedDate)}
               </Text>
-              {selectedDate === dayjs().format('YYYY-MM-DD') && (
+              {/* {selectedDate === dayjs().format('YYYY-MM-DD') && (
                 <Text color="green.600" fontSize="sm" fontWeight="semibold">
                   📅 Today's Report
                 </Text>
-              )}
+              )} */}
               {reportData?.officer?.paymentProcess && (
                 <Text color="blue.600" fontSize="sm" fontWeight="semibold">
                   🔄 Payment Process: {reportData.officer.paymentProcess}
                 </Text>
               )}
             </VStack>
-            <HStack spacing={3}>
-              <InputGroup maxW="200px">
-                <InputLeftElement pointerEvents="none">
-                  <FiCalendar color="gray.300" />
-                </InputLeftElement>
-                <Input
-                  type="date"
-                  value={selectedDate}
-                  onChange={handleDateChange}
-                  size="sm"
-                />
-              </InputGroup>
-              <Button
-                size="sm"
-                colorScheme="blue"
-                variant={selectedDate === dayjs().format('YYYY-MM-DD') ? 'solid' : 'outline'}
-                onClick={() => setSelectedDate(dayjs().format('YYYY-MM-DD'))}
-              >
-                Today
-              </Button>
-              
-              {/* Assign Collections Button */}
-              <Button
-                leftIcon={<FiUserPlus />}
-                colorScheme="blue"
-                size="sm"
-                onClick={() => handleAssignToManager()}
-              >
-                Assign Collections
-              </Button>
 
-              {/* Payment Process Button */}
-              <Menu>
-                <MenuButton
-                  as={Button}
-                  leftIcon={<FiCreditCard />}
-                  rightIcon={<FiChevronDown />}
-                  colorScheme="green"
+            {/* Controls section - responsive layout */}
+            <VStack spacing={3} align="stretch">
+              {/* Date controls row */}
+              <HStack spacing={2} wrap="wrap">
+                <InputGroup maxW={{ base: "150px", sm: "200px" }} minW="120px">
+                  <InputLeftElement pointerEvents="none">
+                    <FiCalendar color="gray.300" />
+                  </InputLeftElement>
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={handleDateChange}
+                    size="sm"
+                  />
+                </InputGroup>
+                <Button
                   size="sm"
+                  colorScheme="blue"
+                  variant={selectedDate === dayjs().format('YYYY-MM-DD') ? 'solid' : 'outline'}
+                  onClick={() => setSelectedDate(dayjs().format('YYYY-MM-DD'))}
+                  flexShrink={0}
                 >
-                  Payment Process
-                </MenuButton>
-                <MenuList>
-                  <MenuItem onClick={() => handlePaymentProcessUpdate('manager')}>
-                    Manager
-                  </MenuItem>
-                  <MenuItem onClick={() => handlePaymentProcessUpdate('deposite to bank')}>
-                    Deposit to Bank
-                  </MenuItem>
-                  <MenuItem onClick={() => handlePaymentProcessUpdate('accounter')}>
-                    Accounter
-                  </MenuItem>
-                  <MenuItem onClick={() => handlePaymentProcessUpdate('reassign to officer')}>
-                    Reassign to Officer
-                  </MenuItem>
-                  <MenuItem onClick={() => handlePaymentProcessUpdate('process complete')}>
-                    Process Complete
-                  </MenuItem>
-                </MenuList>
-              </Menu>
+                  Today
+                </Button>
+              </HStack>
 
-              <Button
-                leftIcon={<FiDownload />}
-                colorScheme="green"
-                size="sm"
-                onClick={handleExport}
-                isDisabled={filteredData.length === 0}
-              >
-                Export CSV
-              </Button>
-            </HStack>
-          </HStack>
+              {/* Action buttons - side by side layout */}
+              <HStack spacing={2} wrap="wrap" justify="flex-start">
+                <Button
+                  leftIcon={<FiUserPlus />}
+                  colorScheme="blue"
+                  size="xs"
+                  onClick={() => handleAssignToManager()}
+                  fontSize="xs"
+                  px={3}
+                >
+                  <Text display={{ base: "none", sm: "inline" }}>Assign Collections</Text>
+                  <Text display={{ base: "inline", sm: "none" }}>Assign</Text>
+                </Button>
+
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    leftIcon={<FiCreditCard />}
+                    rightIcon={<FiChevronDown />}
+                    colorScheme="green"
+                    size="xs"
+                    fontSize="xs"
+                    px={3}
+                  >
+                    <Text display={{ base: "none", sm: "inline" }}>Payment Process</Text>
+                    <Text display={{ base: "inline", sm: "none" }}>Payment</Text>
+                  </MenuButton>
+                  <MenuList>
+                    <MenuItem onClick={() => handlePaymentProcessUpdate('manager')}>
+                      Manager
+                    </MenuItem>
+                    <MenuItem onClick={() => handlePaymentProcessUpdate('deposite to bank')}>
+                      Deposit to Bank
+                    </MenuItem>
+                    <MenuItem onClick={() => handlePaymentProcessUpdate('accounter')}>
+                      Accounter
+                    </MenuItem>
+                    <MenuItem onClick={() => handlePaymentProcessUpdate('reassign to officer')}>
+                      Reassign to Officer
+                    </MenuItem>
+                    <MenuItem onClick={() => handlePaymentProcessUpdate('process complete')}>
+                      Process Complete
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+
+                <Button
+                  leftIcon={<FiDownload />}
+                  colorScheme="green"
+                  size="xs"
+                  onClick={handleExport}
+                  isDisabled={filteredData.length === 0}
+                  fontSize="xs"
+                  px={3}
+                >
+                  <Text display={{ base: "none", sm: "inline" }}>Export CSV</Text>
+                  <Text display={{ base: "inline", sm: "none" }}>Export</Text>
+                </Button>
+              </HStack>
+            </VStack>
+          </VStack>
         </VStack>
 
         {/* Summary Cards */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6} mb={8}>
+        <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={{ base: 4, md: 6 }} mb={8}>
           <GridItem>
             <Card>
-              <CardBody>
+              <CardBody p={{ base: 4, md: 6 }}>
                 <Stat>
-                  <StatLabel>Total Collections</StatLabel>
-                  <StatNumber color="blue.600">{totalCollections}</StatNumber>
-                  <StatHelpText>
+                  <StatLabel fontSize={{ base: "sm", md: "md" }}>Total Collections</StatLabel>
+                  <StatNumber color="blue.600" fontSize={{ base: "lg", md: "xl" }}>{totalCollections}</StatNumber>
+                  <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                     <StatArrow type="increase" />
-                    {reportData?.loanCollections?.length || 0} loans, {reportData?.savingCollections?.length || 0} savings
+                    <Text display={{ base: "block", sm: "inline" }}>
+                      {reportData?.loanCollections?.length || 0} loans
+                    </Text>
+                    <Text display={{ base: "block", sm: "inline" }} ml={{ base: 0, sm: 1 }}>
+                      {reportData?.savingCollections?.length || 0} savings
+                    </Text>
                   </StatHelpText>
                 </Stat>
               </CardBody>
@@ -692,13 +715,18 @@ const DailyReport = () => {
 
           <GridItem>
             <Card>
-              <CardBody>
+              <CardBody p={{ base: 4, md: 6 }}>
                 <Stat>
-                  <StatLabel>Total Amount</StatLabel>
-                  <StatNumber color="green.600">{formatCurrency(totalAmount)}</StatNumber>
-                  <StatHelpText>
+                  <StatLabel fontSize={{ base: "sm", md: "md" }}>Total Amount</StatLabel>
+                  <StatNumber color="green.600" fontSize={{ base: "lg", md: "xl" }}>{formatCurrency(totalAmount)}</StatNumber>
+                  <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                     <StatArrow type="increase" />
-                    {formatCurrency(reportData?.totalLoanAmount || 0)} loans, {formatCurrency(reportData?.totalSavingAmount || 0)} savings
+                    <Text display={{ base: "block", sm: "inline" }}>
+                      {formatCurrency(reportData?.totalLoanAmount || 0)} loans
+                    </Text>
+                    <Text display={{ base: "block", sm: "inline" }} ml={{ base: 0, sm: 1 }}>
+                      {formatCurrency(reportData?.totalSavingAmount || 0)} savings
+                    </Text>
                   </StatHelpText>
                 </Stat>
               </CardBody>
@@ -707,11 +735,11 @@ const DailyReport = () => {
 
           <GridItem>
             <Card>
-              <CardBody>
+              <CardBody p={{ base: 4, md: 6 }}>
                 <Stat>
-                  <StatLabel>Loan Collections</StatLabel>
-                  <StatNumber color="blue.600">{reportData?.loanCollections?.length || 0}</StatNumber>
-                  <StatHelpText>
+                  <StatLabel fontSize={{ base: "sm", md: "md" }}>Loan Collections</StatLabel>
+                  <StatNumber color="blue.600" fontSize={{ base: "lg", md: "xl" }}>{reportData?.loanCollections?.length || 0}</StatNumber>
+                  <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                     <StatArrow type="increase" />
                     {formatCurrency(reportData?.totalLoanAmount || 0)}
                   </StatHelpText>
@@ -722,15 +750,15 @@ const DailyReport = () => {
 
           <GridItem>
             <Card>
-              <CardBody>
+              <CardBody p={{ base: 4, md: 6 }}>
                 <Stat>
-                  <StatLabel>Saving Collections</StatLabel>
-                  <StatNumber color="purple.600">{reportData?.savingCollections?.length || 0}</StatNumber>
-                  <StatHelpText>
+                  <StatLabel fontSize={{ base: "sm", md: "md" }}>Saving Collections</StatLabel>
+                  <StatNumber color="purple.600" fontSize={{ base: "lg", md: "xl" }}>{reportData?.savingCollections?.length || 0}</StatNumber>
+                  <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                     <StatArrow type="increase" />
                     {formatCurrency(reportData?.totalSavingAmount || 0)}
                     {reportData?.savingStats?.totalCount > 0 && selectedDate === dayjs().format('YYYY-MM-DD') && (
-                      <Text fontSize="xs" color="gray.500" mt={1}>
+                      <Text fontSize="xs" color="gray.500" mt={1} display="block">
                         Total today: {reportData.savingStats.totalCount} collections ({formatCurrency(reportData.savingStats.totalAmount)})
                       </Text>
                     )}
@@ -751,65 +779,135 @@ const DailyReport = () => {
           </CardHeader>
           <CardBody>
             {filteredData.length > 0 ? (
-              <TableContainer>
-                <Table variant="simple" size="sm">
-                  <Thead>
-                  <Tr>
-                    <Th>User Name</Th>
-                    <Th>Account Type</Th>
-                    <Th>Amount</Th>
-                    <Th>Collection Time</Th>
-                    <Th>Status</Th>
-                  </Tr>
-                  </Thead>
-                  <Tbody>
-                    {filteredData.map((collection, index) => (
-                      <motion.tr
-                        key={collection._id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                      >
-                        <Td>
-                          <VStack align="start" spacing={1}>
-                            <Text fontWeight="semibold" color="gray.800">
-                              {collection.user_name || collection.user_id?.full_name || 'N/A'}
+              <>
+                {/* Desktop Table View */}
+                <TableContainer display={{ base: "none", lg: "block" }}>
+                  <Table variant="simple" size="sm">
+                    <Thead>
+                    <Tr>
+                      <Th>User Name</Th>
+                      <Th>Account Type</Th>
+                      <Th>Amount</Th>
+                      <Th>Collection Time</Th>
+                      <Th>Status</Th>
+                    </Tr>
+                    </Thead>
+                    <Tbody>
+                      {filteredData.map((collection, index) => (
+                        <motion.tr
+                          key={collection._id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                        >
+                          <Td>
+                            <VStack align="start" spacing={1}>
+                              <Text fontWeight="semibold" color="gray.800">
+                                {collection.user_name || collection.user_id?.full_name || 'N/A'}
+                              </Text>
+                              <Text fontSize="xs" color="gray.500">
+                                📞 {collection.user_phone || collection.user_id?.phone_number || 'No phone'}
+                              </Text>
+                            </VStack>
+                          </Td>
+                          <Td>
+                            <Badge
+                              colorScheme={collection.account_type === 'loan' ? 'blue' : 'purple'}
+                              fontSize="xs"
+                              px={2}
+                              py={1}
+                            >
+                              {collection.account_type === 'loan' ? 'Loan' : 'Saving'}
+                            </Badge>
+                          </Td>
+                          <Td>
+                            <Text fontWeight="semibold" color="green.600">
+                              {formatCurrency(collection.amount || collection.deposit_amount || 0)}
                             </Text>
+                          </Td>
+                          <Td>
+                            <Text fontSize="sm" color="gray.600">
+                              {formatTime(collection.created_on)}
+                            </Text>
+                          </Td>
+                          <Td>
+                            <Badge colorScheme="green" fontSize="xs" px={2} py={1}>
+                              Completed
+                            </Badge>
+                          </Td>
+                        </motion.tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </TableContainer>
+
+                {/* Mobile Card View */}
+                <VStack spacing={4} display={{ base: "flex", lg: "none" }}>
+                  {filteredData.map((collection, index) => (
+                    <motion.div
+                      key={collection._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      style={{ width: '100%' }}
+                    >
+                      <Card variant="outline" p={4}>
+                        <VStack spacing={3} align="stretch">
+                          {/* User Info */}
+                          <HStack justify="space-between" align="start">
+                            <VStack align="start" spacing={1} flex={1}>
+                              <Text fontWeight="semibold" color="gray.800" fontSize="sm">
+                                {collection.user_name || collection.user_id?.full_name || 'N/A'}
+                              </Text>
+                              <Text fontSize="xs" color="gray.500">
+                                📞 {collection.user_phone || collection.user_id?.phone_number || 'No phone'}
+                              </Text>
+                            </VStack>
+                            <Badge
+                              colorScheme={collection.account_type === 'loan' ? 'blue' : 'purple'}
+                              fontSize="xs"
+                              px={2}
+                              py={1}
+                            >
+                              {collection.account_type === 'loan' ? 'Loan' : 'Saving'}
+                            </Badge>
+                          </HStack>
+
+                          {/* Amount and Time */}
+                          <HStack justify="space-between" align="center">
+                            <VStack align="start" spacing={1}>
+                              <Text fontSize="xs" color="gray.500">
+                                Amount
+                              </Text>
+                              <Text fontWeight="bold" color="green.600" fontSize="lg">
+                                {formatCurrency(collection.amount || collection.deposit_amount || 0)}
+                              </Text>
+                            </VStack>
+                            <VStack align="end" spacing={1}>
+                              <Text fontSize="xs" color="gray.500">
+                                Time
+                              </Text>
+                              <Text fontSize="sm" color="gray.600">
+                                {formatTime(collection.created_on)}
+                              </Text>
+                            </VStack>
+                          </HStack>
+
+                          {/* Status */}
+                          <HStack justify="space-between" align="center">
                             <Text fontSize="xs" color="gray.500">
-                              📞 {collection.user_phone || collection.user_id?.phone_number || 'No phone'}
+                              Status
                             </Text>
-                          </VStack>
-                        </Td>
-                        <Td>
-                          <Badge
-                            colorScheme={collection.account_type === 'loan' ? 'blue' : 'purple'}
-                            fontSize="xs"
-                            px={2}
-                            py={1}
-                          >
-                            {collection.account_type === 'loan' ? 'Loan' : 'Saving'}
-                          </Badge>
-                        </Td>
-                        <Td>
-                          <Text fontWeight="semibold" color="green.600">
-                            {formatCurrency(collection.amount || collection.deposit_amount || 0)}
-                          </Text>
-                        </Td>
-                        <Td>
-                          <Text fontSize="sm" color="gray.600">
-                            {formatTime(collection.created_on)}
-                          </Text>
-                        </Td>
-                        <Td>
-                          <Badge colorScheme="green" fontSize="xs" px={2} py={1}>
-                            Completed
-                          </Badge>
-                        </Td>
-                      </motion.tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </TableContainer>
+                            <Badge colorScheme="green" fontSize="xs" px={2} py={1}>
+                              Completed
+                            </Badge>
+                          </HStack>
+                        </VStack>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </VStack>
+              </>
             ) : (
               <Center py={8}>
                 <VStack spacing={4}>
@@ -826,14 +924,16 @@ const DailyReport = () => {
         </Card>
 
         {/* Assign Collections Modal */}
-        <Modal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)}>
+        <Modal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} size={{ base: "full", md: "md" }}>
           <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Assign Daily Collections to Manager for Review</ModalHeader>
+          <ModalContent mx={{ base: 4, md: 0 }}>
+            <ModalHeader fontSize={{ base: "md", md: "lg" }}>
+              Assign Daily Collections to Manager for Review
+            </ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>
               <VStack spacing={4}>
-                <Text>
+                <Text fontSize={{ base: "sm", md: "md" }}>
                   Assign your daily collections to <strong>Manager</strong> for review and approval
                 </Text>
                 <Text fontSize="sm" color="gray.600">
@@ -841,7 +941,7 @@ const DailyReport = () => {
                 </Text>
                 <Box p={4} bg="blue.50" borderRadius="md" border="1px solid" borderColor="blue.200">
                   <VStack spacing={2} align="start">
-                    <Text fontWeight="semibold" color="blue.700">
+                    <Text fontWeight="semibold" color="blue.700" fontSize={{ base: "sm", md: "md" }}>
                       Collections Summary:
                     </Text>
                     <Text fontSize="sm" color="blue.600">
@@ -858,40 +958,50 @@ const DailyReport = () => {
                     </Text>
                   </VStack>
                 </Box>
-                <HStack spacing={3}>
-                  <Button onClick={handleAssignSubmit} colorScheme="blue">
+                <VStack spacing={3} width="full">
+                  <Button 
+                    onClick={handleAssignSubmit} 
+                    colorScheme="blue" 
+                    width="full"
+                    size={{ base: "md", md: "sm" }}
+                  >
                     Assign Collections to Manager
                   </Button>
-                  <Button onClick={() => setIsAssignModalOpen(false)}>
+                  <Button 
+                    onClick={() => setIsAssignModalOpen(false)}
+                    width="full"
+                    size={{ base: "md", md: "sm" }}
+                  >
                     Cancel
                   </Button>
-                </HStack>
+                </VStack>
               </VStack>
             </ModalBody>
           </ModalContent>
         </Modal>
 
         {/* Payment Process Modal */}
-        <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)}>
+        <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} size={{ base: "full", md: "md" }}>
           <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>
+          <ModalContent mx={{ base: 4, md: 0 }}>
+            <ModalHeader fontSize={{ base: "md", md: "lg" }}>
               {paymentProcessType === 'deposit_to_bank' ? 'Deposit to Bank' : 'Payment Process - Manager'}
             </ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>
               <VStack spacing={4}>
-                <Text>
+                <Text fontSize={{ base: "sm", md: "md" }}>
                   Process payment through <strong>
                     {paymentProcessType === 'deposit_to_bank' ? 'Bank Deposit' : 'Manager'}
                   </strong>
                 </Text>
                 <FormControl>
-                  <FormLabel>Select User</FormLabel>
+                  <FormLabel fontSize={{ base: "sm", md: "md" }}>Select User</FormLabel>
                   <Select
                     placeholder="Choose a user"
                     value={selectedUser}
                     onChange={(e) => setSelectedUser(e.target.value)}
+                    size={{ base: "md", md: "sm" }}
                   >
                     {filteredData.map((collection) => (
                       <option key={collection._id} value={collection._id}>
@@ -901,21 +1011,23 @@ const DailyReport = () => {
                   </Select>
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Payment Type</FormLabel>
+                  <FormLabel fontSize={{ base: "sm", md: "md" }}>Payment Type</FormLabel>
                   <Select
                     value={paymentType}
                     onChange={(e) => setPaymentType(e.target.value)}
+                    size={{ base: "md", md: "sm" }}
                   >
                     <option value="loan">Loan Payment</option>
                     <option value="saving">Saving Deposit</option>
                   </Select>
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel fontSize={{ base: "sm", md: "md" }}>Amount</FormLabel>
                   <NumberInput
                     value={paymentAmount}
                     onChange={(value) => setPaymentAmount(value)}
                     min={0}
+                    size={{ base: "md", md: "sm" }}
                   >
                     <NumberInputField />
                     <NumberInputStepper>
@@ -924,14 +1036,23 @@ const DailyReport = () => {
                     </NumberInputStepper>
                   </NumberInput>
                 </FormControl>
-                <HStack spacing={3}>
-                  <Button onClick={handlePaymentSubmit} colorScheme="green">
+                <VStack spacing={3} width="full">
+                  <Button 
+                    onClick={handlePaymentSubmit} 
+                    colorScheme="green"
+                    width="full"
+                    size={{ base: "md", md: "sm" }}
+                  >
                     {paymentProcessType === 'deposit_to_bank' ? 'Deposit to Bank' : 'Process Payment'}
                   </Button>
-                  <Button onClick={() => setIsPaymentModalOpen(false)}>
+                  <Button 
+                    onClick={() => setIsPaymentModalOpen(false)}
+                    width="full"
+                    size={{ base: "md", md: "sm" }}
+                  >
                     Cancel
                   </Button>
-                </HStack>
+                </VStack>
               </VStack>
             </ModalBody>
           </ModalContent>

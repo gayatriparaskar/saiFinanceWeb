@@ -527,9 +527,9 @@ const WeeklyReport = () => {
 
     // Create CSV data
     const csvData = weeklyData.map(collection => ({
-      'Collection ID': collection._id || 'N/A',
-      'User Name': collection.user_name || 'N/A',
-      'Account Type': collection.account_type || 'N/A',
+      'Collection ID': collection._id,
+      'User Name': collection.user_name ,
+      'Account Type': collection.account_type,
       'Amount': collection.amount || collection.deposit_amount || 0,
       'Collection Date': formatDate(collection.created_on),
       'Status': collection.status || 'Completed'
@@ -585,7 +585,7 @@ const WeeklyReport = () => {
   const maxDailyAmount = Math.max(...(reportData?.dailyBreakdown?.map(day => day.totalAmount) || [0]));
 
   return (
-    <Box p={6} maxW="1400px" mx="auto">
+    <Box p={{ base: 4, md: 6 }} maxW="1400px" mx="auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -593,82 +593,103 @@ const WeeklyReport = () => {
       >
         {/* Header */}
         <VStack spacing={4} align="stretch" mb={8}>
-          <HStack justify="space-between" align="center">
+          {/* Mobile-first responsive header */}
+          <VStack spacing={4} align="stretch">
+            {/* Title and info section */}
             <VStack align="start" spacing={1}>
-              <Heading size="lg" color="purple.600" display="flex" alignItems="center" gap={2}>
+              <Heading size={{ base: "md", md: "lg" }} color="purple.600" display="flex" alignItems="center" gap={2}>
                 <FiBarChart2 />
                 Weekly Report
               </Heading>
-              <Text color="gray.600">
-                Collection performance for week {selectedWeek} ({formatDate(reportData?.weekStart)} - {formatDate(reportData?.weekEnd)})
+              <Text color="gray.600" fontSize={{ base: "sm", md: "md" }}>
+              {selectedWeek} ({formatDate(reportData?.weekStart)} - {formatDate(reportData?.weekEnd)})
               </Text>
             </VStack>
-            <HStack spacing={3}>
-              <Button
-                size="sm"
-                colorScheme="blue"
-                variant="outline"
-                onClick={() => {
-                  const currentWeek = dayjs().week();
-                  const currentYear = dayjs().year();
-                  setSelectedWeek(`${currentYear}-W${currentWeek.toString().padStart(2, '0')}`);
-                }}
-              >
-                Current Week
-              </Button>
-              <Select
-                value={selectedWeek}
-                onChange={handleWeekChange}
-                size="sm"
-                maxW="200px"
-              >
-                {Array.from({ length: 52 }, (_, i) => {
-                  const weekNumber = i + 1;
-                  const currentYear = dayjs().year();
-                  const weekStr = `${currentYear}-W${weekNumber.toString().padStart(2, '0')}`;
-                  const weekStart = dayjs().year(currentYear).week(weekNumber).startOf('isoWeek');
-                  const weekEnd = dayjs().year(currentYear).week(weekNumber).endOf('isoWeek');
-                  const currentWeek = dayjs().week();
-                  const currentWeekStr = `${currentYear}-W${currentWeek.toString().padStart(2, '0')}`;
-                  const isCurrentWeek = weekStr === currentWeekStr;
-                  return (
-                    <option key={weekStr} value={weekStr}>
-                      {isCurrentWeek ? '📍 ' : ''}Week {weekNumber} ({weekStart.format('MMM DD')} - {weekEnd.format('MMM DD')}){isCurrentWeek ? ' - Current' : ''}
-                    </option>
-                  );
-                })}
-              </Select>
-              <Button
-                size="sm"
-                colorScheme="blue"
-                variant="outline"
-                onClick={fetchWeeklyReport}
-                isLoading={loading}
-              >
-                Refresh Data
-              </Button>
-              <Button
-                leftIcon={<FiDownload />}
-                colorScheme="purple"
-                size="sm"
-                onClick={handleExport}
-                isDisabled={weeklyData.length === 0}
-              >
-                Export CSV
-              </Button>
-            </HStack>
-          </HStack>
+
+            {/* Controls section - responsive layout */}
+            <VStack spacing={3} align="stretch">
+              {/* Week controls row */}
+              <HStack spacing={2} wrap="wrap">
+                <Button
+                  size="xs"
+                  colorScheme="blue"
+                  variant="outline"
+                  onClick={() => {
+                    const currentWeek = dayjs().week();
+                    const currentYear = dayjs().year();
+                    setSelectedWeek(`${currentYear}-W${currentWeek.toString().padStart(2, '0')}`);
+                  }}
+                  fontSize="xs"
+                  px={3}
+                >
+                  Current Week
+                </Button>
+                <Select
+                  value={selectedWeek}
+                  onChange={handleWeekChange}
+                  size="xs"
+                  maxW={{ base: "150px", sm: "200px" }}
+                  minW="120px"
+                  fontSize="xs"
+                >
+                  {Array.from({ length: 52 }, (_, i) => {
+                    const weekNumber = i + 1;
+                    const currentYear = dayjs().year();
+                    const weekStr = `${currentYear}-W${weekNumber.toString().padStart(2, '0')}`;
+                    const weekStart = dayjs().year(currentYear).week(weekNumber).startOf('isoWeek');
+                    const weekEnd = dayjs().year(currentYear).week(weekNumber).endOf('isoWeek');
+                    const currentWeek = dayjs().week();
+                    const currentWeekStr = `${currentYear}-W${currentWeek.toString().padStart(2, '0')}`;
+                    const isCurrentWeek = weekStr === currentWeekStr;
+                    return (
+                      <option key={weekStr} value={weekStr}>
+                        {isCurrentWeek ? '📍 ' : ''}Week {weekNumber} ({weekStart.format('MMM DD')} - {weekEnd.format('MMM DD')}){isCurrentWeek ? ' - Current' : ''}
+                      </option>
+                    );
+                  })}
+                </Select>
+              </HStack>
+
+              {/* Action buttons - side by side layout */}
+              <HStack spacing={2} wrap="wrap" justify="flex-start">
+                <Button
+                  size="xs"
+                  colorScheme="blue"
+                  variant="outline"
+                  onClick={fetchWeeklyReport}
+                  isLoading={loading}
+                  fontSize="xs"
+                  px={3}
+                >
+                  <Text display={{ base: "none", sm: "inline" }}>Refresh Data</Text>
+                  <Text display={{ base: "inline", sm: "none" }}>Refresh</Text>
+                </Button>
+                <Button
+                  leftIcon={<FiDownload />}
+                  colorScheme="purple"
+                  size="xs"
+                  onClick={handleExport}
+                  isDisabled={weeklyData.length === 0}
+                  fontSize="xs"
+                  px={3}
+                >
+                  <Text display={{ base: "none", sm: "inline" }}>Export CSV</Text>
+                  <Text display={{ base: "inline", sm: "none" }}>Export</Text>
+                </Button>
+              </HStack>
+            </VStack>
+          </VStack>
         </VStack>
 
         {/* Summary Cards */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6} mb={8}>
+        <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={{ base: 4, md: 6 }} mb={8}>
           <GridItem>
             <Card>
-              <CardBody>
+              <CardBody p={{ base: 4, md: 6 }}>
                 <Stat>
-                  <StatLabel>Total Collections</StatLabel>
-                  <StatNumber color="purple.600">{reportData?.totalCollections || 0}</StatNumber>
-                  <StatHelpText>
+                  <StatLabel fontSize={{ base: "sm", md: "md" }}>Total Collections</StatLabel>
+                  <StatNumber color="purple.600" fontSize={{ base: "lg", md: "xl" }}>{reportData?.totalCollections || 0}</StatNumber>
+                  <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                     <StatArrow type="increase" />
                     This week
                   </StatHelpText>
@@ -679,13 +700,18 @@ const WeeklyReport = () => {
 
           <GridItem>
             <Card>
-              <CardBody>
+              <CardBody p={{ base: 4, md: 6 }}>
                 <Stat>
-                  <StatLabel>Total Amount</StatLabel>
-                  <StatNumber color="green.600">{formatCurrency(totalAmount)}</StatNumber>
-                  <StatHelpText>
+                  <StatLabel fontSize={{ base: "sm", md: "md" }}>Total Amount</StatLabel>
+                  <StatNumber color="green.600" fontSize={{ base: "lg", md: "xl" }}>{formatCurrency(totalAmount)}</StatNumber>
+                  <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                     <StatArrow type="increase" />
-                    {formatCurrency(reportData?.totalLoanAmount || 0)} loans, {formatCurrency(reportData?.totalSavingAmount || 0)} savings
+                    <Text display={{ base: "block", sm: "inline" }}>
+                      {formatCurrency(reportData?.totalLoanAmount || 0)} loans
+                    </Text>
+                    <Text display={{ base: "block", sm: "inline" }} ml={{ base: 0, sm: 1 }}>
+                      {formatCurrency(reportData?.totalSavingAmount || 0)} savings
+                    </Text>
                   </StatHelpText>
                 </Stat>
               </CardBody>
@@ -694,11 +720,11 @@ const WeeklyReport = () => {
 
           <GridItem>
             <Card>
-              <CardBody>
+              <CardBody p={{ base: 4, md: 6 }}>
                 <Stat>
-                  <StatLabel>Average Daily</StatLabel>
-                  <StatNumber color="blue.600">{formatCurrency(totalAmount / 7)}</StatNumber>
-                  <StatHelpText>
+                  <StatLabel fontSize={{ base: "sm", md: "md" }}>Average Daily</StatLabel>
+                  <StatNumber color="blue.600" fontSize={{ base: "lg", md: "xl" }}>{formatCurrency(totalAmount / 7)}</StatNumber>
+                  <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                     <StatArrow type="increase" />
                     Per day average
                   </StatHelpText>
@@ -709,16 +735,16 @@ const WeeklyReport = () => {
 
           <GridItem>
             <Card>
-              <CardBody>
+              <CardBody p={{ base: 4, md: 6 }}>
                 <Stat>
-                  <StatLabel>Best Day</StatLabel>
-                  <StatNumber color="orange.600">
+                  <StatLabel fontSize={{ base: "sm", md: "md" }}>Best Day</StatLabel>
+                  <StatNumber color="orange.600" fontSize={{ base: "lg", md: "xl" }}>
                     {reportData?.dailyBreakdown?.reduce((max, day) => 
                       day.totalAmount > max.totalAmount ? day : max, 
                       { totalAmount: 0, dayName: 'N/A' }
                     ).dayName || 'N/A'}
                   </StatNumber>
-                  <StatHelpText>
+                  <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                     <StatArrow type="increase" />
                     Highest collection day
                   </StatHelpText>
@@ -731,7 +757,7 @@ const WeeklyReport = () => {
         {/* Daily Breakdown */}
         <Card mb={8}>
           <CardHeader>
-            <Heading size="md" color="gray.700">
+            <Heading size={{ base: "sm", md: "md" }} color="gray.700">
               Daily Performance Breakdown
             </Heading>
           </CardHeader>
@@ -744,45 +770,60 @@ const WeeklyReport = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                 >
-                  <Box p={4} border="1px" borderColor="gray.200" borderRadius="md">
-                    <HStack justify="space-between" mb={3}>
-                      <VStack align="start" spacing={1}>
-                        <Text fontWeight="semibold" fontSize="lg">
-                          {day.dayName}
-                        </Text>
-                        <Text fontSize="sm" color="gray.600">
-                          {formatDate(day.date)}
-                        </Text>
-                      </VStack>
-                      <VStack align="end" spacing={1}>
-                        <Text fontWeight="bold" fontSize="lg" color="green.600">
+                  <Box p={{ base: 3, md: 4 }} border="1px" borderColor="gray.200" borderRadius="md">
+                    <VStack spacing={3} align="stretch">
+                      {/* Day header - mobile responsive */}
+                      <HStack justify="space-between" align="start">
+                        <VStack align="start" spacing={1}>
+                          <Text fontWeight="semibold" fontSize={{ base: "md", md: "lg" }}>
+                            {day.dayName}
+                          </Text>
+                          <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
+                            {formatDate(day.date)}
+                          </Text>
+                        </VStack>
+                        <VStack align="end" spacing={1}>
+                          <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }} color="green.600">
+                            {formatCurrency(day.totalAmount)}
+                          </Text>
+                          <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
+                            {day.loanCollections + day.savingCollections} collections
+                          </Text>
+                        </VStack>
+                      </HStack>
+                      
+                      {/* Progress bar */}
+                      <Progress 
+                        value={maxDailyAmount > 0 ? (day.totalAmount / maxDailyAmount) * 100 : 0} 
+                        colorScheme="purple" 
+                        size={{ base: "md", md: "lg" }}
+                        borderRadius="md"
+                      >
+                        <ProgressLabel fontSize={{ base: "xs", md: "sm" }}>
                           {formatCurrency(day.totalAmount)}
-                        </Text>
-                        <Text fontSize="sm" color="gray.600">
-                          {day.loanCollections + day.savingCollections} collections
-                        </Text>
+                        </ProgressLabel>
+                      </Progress>
+                      
+                      {/* Collections breakdown - mobile responsive */}
+                      <VStack spacing={2} align="stretch">
+                        <HStack justify="space-between" align="center">
+                          <Text fontSize={{ base: "xs", md: "sm" }} color="blue.600">
+                            {day.loanCollections} loans
+                          </Text>
+                          <Text fontSize={{ base: "xs", md: "sm" }} color="blue.600" fontWeight="semibold">
+                            {formatCurrency(day.loanAmount)}
+                          </Text>
+                        </HStack>
+                        <HStack justify="space-between" align="center">
+                          <Text fontSize={{ base: "xs", md: "sm" }} color="purple.600">
+                            {day.savingCollections} savings
+                          </Text>
+                          <Text fontSize={{ base: "xs", md: "sm" }} color="purple.600" fontWeight="semibold">
+                            {formatCurrency(day.savingAmount)}
+                          </Text>
+                        </HStack>
                       </VStack>
-                    </HStack>
-                    
-                    <Progress 
-                      value={maxDailyAmount > 0 ? (day.totalAmount / maxDailyAmount) * 100 : 0} 
-                      colorScheme="purple" 
-                      size="lg" 
-                      borderRadius="md"
-                    >
-                      <ProgressLabel>
-                        {formatCurrency(day.totalAmount)}
-                      </ProgressLabel>
-                    </Progress>
-                    
-                    <HStack justify="space-between" mt={2}>
-                      <Text fontSize="sm" color="blue.600">
-                        {day.loanCollections} loans ({formatCurrency(day.loanAmount)})
-                      </Text>
-                      <Text fontSize="sm" color="purple.600">
-                        {day.savingCollections} savings ({formatCurrency(day.savingAmount)})
-                      </Text>
-                    </HStack>
+                    </VStack>
                   </Box>
                 </motion.div>
               ))}
@@ -793,21 +834,21 @@ const WeeklyReport = () => {
         {/* Collections Table */}
         <Card>
           <CardHeader>
-            <Heading size="md" color="gray.700">
+            <Heading size={{ base: "sm", md: "md" }} color="gray.700">
               All Collections This Week
             </Heading>
           </CardHeader>
           <CardBody>
             {weeklyData.length > 0 ? (
-              <TableContainer>
-                <Table variant="simple" size="sm">
+              <TableContainer overflowX="auto">
+                <Table variant="simple" size={{ base: "sm", md: "md" }}>
                   <Thead>
                     <Tr>
-                      <Th>User Name</Th>
-                      <Th>Account Type</Th>
-                      <Th>Amount</Th>
-                      <Th>Collection Date</Th>
-                      <Th>Status</Th>
+                      <Th fontSize={{ base: "xs", md: "sm" }}>User Name</Th>
+                      <Th fontSize={{ base: "xs", md: "sm" }}>Account Type</Th>
+                      <Th fontSize={{ base: "xs", md: "sm" }}>Amount</Th>
+                      <Th fontSize={{ base: "xs", md: "sm" }}>Collection Date</Th>
+                      <Th fontSize={{ base: "xs", md: "sm" }}>Status</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -820,7 +861,7 @@ const WeeklyReport = () => {
                       >
                         <Td>
                           <VStack align="start" spacing={1}>
-                            <Text fontWeight="semibold" color="gray.800">
+                            <Text fontWeight="semibold" color="gray.800" fontSize={{ base: "xs", md: "sm" }}>
                               {collection.user_name || collection.user_id?.full_name || 'N/A'}
                             </Text>
                             <Text fontSize="xs" color="gray.500">
@@ -839,13 +880,13 @@ const WeeklyReport = () => {
                           </Badge>
                         </Td>
                         <Td>
-                          <Text fontWeight="semibold" color="green.600">
+                          <Text fontWeight="semibold" color="green.600" fontSize={{ base: "xs", md: "sm" }}>
                             {formatCurrency(collection.amount || collection.deposit_amount || 0)}
                           </Text>
                         </Td>
                         <Td>
-                          <Text fontSize="sm" color="gray.600">
-                            {formatDate(collection.created_on)}
+                          <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
+                            {formatDate(collection.created_on || collection.collected_on)}
                           </Text>
                         </Td>
                         <Td>
