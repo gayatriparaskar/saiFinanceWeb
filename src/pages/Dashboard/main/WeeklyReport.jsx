@@ -27,7 +27,14 @@ import {
   InputGroup,
   InputLeftElement,
   SimpleGrid,
-  useColorModeValue
+  useColorModeValue,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer
 } from '@chakra-ui/react';
 import { FiSearch, FiDownload, FiRefreshCw, FiCalendar, FiBarChart2, FiTrendingUp, FiUsers } from 'react-icons/fi';
 import { motion } from 'framer-motion';
