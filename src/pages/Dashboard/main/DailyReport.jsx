@@ -67,6 +67,32 @@ const DailyReport = () => {
     filterReports();
   }, [reports, searchTerm]);
 
+  // Show payment process info toast when component mounts
+  useEffect(() => {
+    // Show toast immediately when component mounts
+    const showPaymentInfoToast = () => {
+      console.log('🍞 Attempting to show toast...');
+      try {
+        toast({
+          title: 'Payment Process Information',
+          description: 'This page shows all daily transactions including deposits, withdrawals, and loan collections. Use the date picker to view different days and search to filter transactions.',
+          status: 'success',
+          duration: 10000,
+          isClosable: true,
+          position: 'top',
+        });
+        console.log('🍞 Toast called successfully');
+      } catch (error) {
+        console.error('🍞 Toast error:', error);
+      }
+    };
+
+    // Show toast after component is fully mounted
+    const timer = setTimeout(showPaymentInfoToast, 100);
+    
+    return () => clearTimeout(timer);
+  }, []); // Remove toast dependency to avoid re-running
+
   const fetchDailyReports = async () => {
     try {
       setLoading(true);
@@ -222,33 +248,56 @@ const DailyReport = () => {
                   </Text>
                 </VStack>
                 
-                <HStack spacing={3}>
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    size="md"
-                    maxW="200px"
-                  />
-                  <Button
-                    leftIcon={<FiRefreshCw />}
-                    onClick={fetchDailyReports}
-                    colorScheme="blue"
-                    variant="outline"
-                    size="md"
-                  >
-                    Refresh
-                  </Button>
+                <VStack spacing={3} align="stretch" w="full" sm={{ w: "auto" }}>
+                  <HStack spacing={2} wrap="wrap">
+                    <Input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      size={{ base: "sm", md: "md" }}
+                      minW={{ base: "150px", sm: "200px" }}
+                    />
+                    <Button
+                      leftIcon={<FiRefreshCw />}
+                      onClick={fetchDailyReports}
+                      colorScheme="blue"
+                      variant="outline"
+                      size={{ base: "sm", md: "md" }}
+                      flex={{ base: "1", sm: "0" }}
+                    >
+                      Refresh
+                    </Button>
+                  </HStack>
                   <Button
                     leftIcon={<FiDownload />}
                     onClick={exportToCSV}
                     colorScheme="green"
-                    size="md"
+                    size={{ base: "sm", md: "md" }}
                     isDisabled={filteredReports.length === 0}
+                    w="full"
+                    sm={{ w: "auto" }}
                   >
                     Export CSV
                   </Button>
-                </HStack>
+                  <Button
+                    onClick={() => {
+                      console.log('🧪 Test toast button clicked');
+                      toast({
+                        title: 'Test Toast',
+                        description: 'This is a test toast to verify the toast system is working.',
+                        status: 'info',
+                        duration: 5000,
+                        isClosable: true,
+                      });
+                    }}
+                    colorScheme="purple"
+                    size={{ base: "sm", md: "md" }}
+                    w="full"
+                    sm={{ w: "auto" }}
+                  >
+                    Test Toast
+                  </Button>
+                </VStack>
               </Flex>
             </CardHeader>
           </Card>
@@ -331,8 +380,8 @@ const DailyReport = () => {
         >
           <Card bg={cardBg} shadow="md">
             <CardBody>
-              <HStack spacing={4} wrap="wrap">
-                <InputGroup maxW="300px">
+              <VStack spacing={4} align="stretch">
+                <InputGroup maxW={{ base: "100%", sm: "300px" }}>
                   <InputLeftElement>
                     <FiSearch color="gray.300" />
                   </InputLeftElement>
@@ -340,13 +389,14 @@ const DailyReport = () => {
                     placeholder="Search by customer, officer, or type..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    size={{ base: "sm", md: "md" }}
                   />
                 </InputGroup>
                 
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize="sm" color="gray.600" textAlign={{ base: "center", sm: "left" }}>
                   Showing {filteredReports.length} of {reports.length} transactions
                 </Text>
-              </HStack>
+              </VStack>
             </CardBody>
           </Card>
         </MotionBox>
@@ -369,32 +419,32 @@ const DailyReport = () => {
                   </Text>
                 </Box>
               ) : (
-                <TableContainer>
-                  <Table variant="simple" size="sm">
+                <TableContainer overflowX="auto">
+                  <Table variant="simple" size={{ base: "sm", md: "md" }} minW="600px">
                     <Thead>
                       <Tr>
-                        <Th>Time</Th>
-                        <Th>Customer</Th>
-                        <Th>Officer</Th>
-                        <Th>Type</Th>
-                        <Th isNumeric>Amount</Th>
+                        <Th fontSize={{ base: "xs", md: "sm" }}>Time</Th>
+                        <Th fontSize={{ base: "xs", md: "sm" }}>Customer</Th>
+                        <Th fontSize={{ base: "xs", md: "sm" }} display={{ base: "none", md: "table-cell" }}>Officer</Th>
+                        <Th fontSize={{ base: "xs", md: "sm" }}>Type</Th>
+                        <Th isNumeric fontSize={{ base: "xs", md: "sm" }}>Amount</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
                       {filteredReports.map((report, index) => (
                         <Tr key={index}>
                           <Td>
-                            <Text fontSize="sm">
+                            <Text fontSize={{ base: "xs", md: "sm" }}>
                               {dayjs(report.created_at).format('HH:mm:ss')}
                             </Text>
                           </Td>
                           <Td>
-                            <Text fontWeight="medium">
+                            <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }}>
                               {report.customer_name || 'N/A'}
                             </Text>
                           </Td>
-                          <Td>
-                            <Text fontSize="sm" color="gray.600">
+                          <Td display={{ base: "none", md: "table-cell" }}>
+                            <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
                               {report.officer_name || 'N/A'}
                             </Text>
                           </Td>
@@ -402,12 +452,13 @@ const DailyReport = () => {
                             <Badge
                               colorScheme={getTransactionTypeColor(report.transaction_type)}
                               variant="subtle"
+                              fontSize={{ base: "xs", md: "sm" }}
                             >
                               {getTransactionTypeLabel(report.transaction_type)}
                             </Badge>
                           </Td>
                           <Td isNumeric>
-                            <Text fontWeight="bold" color="green.600">
+                            <Text fontWeight="bold" color="green.600" fontSize={{ base: "xs", md: "sm" }}>
                               ₹{parseFloat(report.amount || 0).toLocaleString()}
                             </Text>
                           </Td>

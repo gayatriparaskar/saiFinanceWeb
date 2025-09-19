@@ -65,6 +65,32 @@ const WeeklyReport = () => {
     filterReports();
   }, [reports, searchTerm]);
 
+  // Show payment process info toast when component mounts
+  useEffect(() => {
+    // Show toast immediately when component mounts
+    const showPaymentInfoToast = () => {
+      console.log('🍞 Attempting to show toast...');
+      try {
+        toast({
+          title: 'Weekly/Monthly Report Information',
+          description: 'This page shows comprehensive weekly and monthly transaction analytics. Toggle between weekly and monthly views, use search to filter transactions, and export data for analysis.',
+          status: 'success',
+          duration: 10000,
+          isClosable: true,
+          position: 'top',
+        });
+        console.log('🍞 Toast called successfully');
+      } catch (error) {
+        console.error('🍞 Toast error:', error);
+      }
+    };
+
+    // Show toast after component is fully mounted
+    const timer = setTimeout(showPaymentInfoToast, 100);
+    
+    return () => clearTimeout(timer);
+  }, []); // Remove toast dependency to avoid re-running
+
   const fetchWeeklyReports = async () => {
     try {
       setLoading(true);
@@ -238,42 +264,49 @@ const WeeklyReport = () => {
                   </Text>
                 </VStack>
                 
-                <HStack spacing={3}>
-                  <Button
-                    onClick={() => setIsMonthlyView(false)}
-                    colorScheme={!isMonthlyView ? "blue" : "gray"}
-                    variant={!isMonthlyView ? "solid" : "outline"}
-                    size="md"
-                  >
-                    Weekly
-                  </Button>
-                  <Button
-                    onClick={() => setIsMonthlyView(true)}
-                    colorScheme={isMonthlyView ? "blue" : "gray"}
-                    variant={isMonthlyView ? "solid" : "outline"}
-                    size="md"
-                  >
-                    Monthly
-                  </Button>
-                  <Button
-                    leftIcon={<FiRefreshCw />}
-                    onClick={fetchWeeklyReports}
-                    colorScheme="blue"
-                    variant="outline"
-                    size="md"
-                  >
-                    Refresh
-                  </Button>
+                <VStack spacing={3} align="stretch" w="full" sm={{ w: "auto" }}>
+                  <HStack spacing={2} wrap="wrap" justify={{ base: "center", sm: "flex-start" }}>
+                    <Button
+                      onClick={() => setIsMonthlyView(false)}
+                      colorScheme={!isMonthlyView ? "blue" : "gray"}
+                      variant={!isMonthlyView ? "solid" : "outline"}
+                      size={{ base: "sm", md: "md" }}
+                      flex={{ base: "1", sm: "0" }}
+                    >
+                      Weekly
+                    </Button>
+                    <Button
+                      onClick={() => setIsMonthlyView(true)}
+                      colorScheme={isMonthlyView ? "blue" : "gray"}
+                      variant={isMonthlyView ? "solid" : "outline"}
+                      size={{ base: "sm", md: "md" }}
+                      flex={{ base: "1", sm: "0" }}
+                    >
+                      Monthly
+                    </Button>
+                    <Button
+                      leftIcon={<FiRefreshCw />}
+                      onClick={fetchWeeklyReports}
+                      colorScheme="blue"
+                      variant="outline"
+                      size={{ base: "sm", md: "md" }}
+                      flex={{ base: "1", sm: "0" }}
+                    >
+                      Refresh
+                    </Button>
+                  </HStack>
                   <Button
                     leftIcon={<FiDownload />}
                     onClick={exportToCSV}
                     colorScheme="green"
-                    size="md"
+                    size={{ base: "sm", md: "md" }}
                     isDisabled={filteredReports.length === 0}
+                    w="full"
+                    sm={{ w: "auto" }}
                   >
                     Export CSV
                   </Button>
-                </HStack>
+                </VStack>
               </Flex>
             </CardHeader>
           </Card>
@@ -356,8 +389,8 @@ const WeeklyReport = () => {
         >
           <Card bg={cardBg} shadow="md">
             <CardBody>
-              <HStack spacing={4} wrap="wrap">
-                <InputGroup maxW="300px">
+              <VStack spacing={4} align="stretch">
+                <InputGroup maxW={{ base: "100%", sm: "300px" }}>
                   <InputLeftElement>
                     <FiSearch color="gray.300" />
                   </InputLeftElement>
@@ -365,13 +398,14 @@ const WeeklyReport = () => {
                     placeholder="Search by customer, officer, or type..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    size={{ base: "sm", md: "md" }}
                   />
                 </InputGroup>
                 
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize="sm" color="gray.600" textAlign={{ base: "center", sm: "left" }}>
                   Showing {filteredReports.length} of {reports.length} transactions
                 </Text>
-              </HStack>
+              </VStack>
             </CardBody>
           </Card>
         </MotionBox>
@@ -394,38 +428,38 @@ const WeeklyReport = () => {
                   </Text>
                 </Box>
               ) : (
-                <Box overflowX="auto">
-                  <Table variant="simple" size="sm" minW="600px">
+                <TableContainer overflowX="auto">
+                  <Table variant="simple" size={{ base: "sm", md: "md" }} minW="600px">
                     <Thead>
                       <Tr>
-                        <Th>Date</Th>
-                        <Th>Time</Th>
-                        <Th>Customer</Th>
-                        <Th>Officer</Th>
-                        <Th>Type</Th>
-                        <Th isNumeric>Amount</Th>
+                        <Th fontSize={{ base: "xs", md: "sm" }}>Date</Th>
+                        <Th fontSize={{ base: "xs", md: "sm" }} display={{ base: "none", sm: "table-cell" }}>Time</Th>
+                        <Th fontSize={{ base: "xs", md: "sm" }}>Customer</Th>
+                        <Th fontSize={{ base: "xs", md: "sm" }} display={{ base: "none", md: "table-cell" }}>Officer</Th>
+                        <Th fontSize={{ base: "xs", md: "sm" }}>Type</Th>
+                        <Th isNumeric fontSize={{ base: "xs", md: "sm" }}>Amount</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
                       {filteredReports.map((report, index) => (
                         <Tr key={index}>
                           <Td>
-                            <Text fontSize="sm">
+                            <Text fontSize={{ base: "xs", md: "sm" }}>
                               {dayjs(report.created_at).format('MMM DD')}
                             </Text>
                           </Td>
-                          <Td>
-                            <Text fontSize="sm">
+                          <Td display={{ base: "none", sm: "table-cell" }}>
+                            <Text fontSize={{ base: "xs", md: "sm" }}>
                               {dayjs(report.created_at).format('HH:mm:ss')}
                             </Text>
                           </Td>
                           <Td>
-                            <Text fontWeight="medium">
+                            <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }}>
                               {report.customer_name || 'N/A'}
                             </Text>
                           </Td>
-                          <Td>
-                            <Text fontSize="sm" color="gray.600">
+                          <Td display={{ base: "none", md: "table-cell" }}>
+                            <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
                               {report.officer_name || 'N/A'}
                             </Text>
                           </Td>
@@ -433,12 +467,13 @@ const WeeklyReport = () => {
                             <Badge
                               colorScheme={getTransactionTypeColor(report.transaction_type)}
                               variant="subtle"
+                              fontSize={{ base: "xs", md: "sm" }}
                             >
                               {getTransactionTypeLabel(report.transaction_type)}
                             </Badge>
                           </Td>
                           <Td isNumeric>
-                            <Text fontWeight="bold" color="green.600">
+                            <Text fontWeight="bold" color="green.600" fontSize={{ base: "xs", md: "sm" }}>
                               ₹{parseFloat(report.amount || 0).toLocaleString()}
                             </Text>
                           </Td>
@@ -446,7 +481,7 @@ const WeeklyReport = () => {
                       ))}
                     </Tbody>
                   </Table>
-                </Box>
+                </TableContainer>
               )}
             </CardBody>
           </Card>
