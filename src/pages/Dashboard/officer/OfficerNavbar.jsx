@@ -185,22 +185,12 @@ const OfficerNavbar = () => {
             
             <Button
               variant="ghost"
-              leftIcon={<FiCalendar />}
-              onClick={() => navigate('/officer/daily-report')}
-              colorScheme="green"
-              size={{ base: "sm", md: "md" }}
-            >
-              Daily Report
-            </Button>
-            
-            <Button
-              variant="ghost"
               leftIcon={<FiBarChart2 />}
-              onClick={() => navigate('/officer/weekly-report')}
+              onClick={() => navigate('/dash/reports')}
               colorScheme="purple"
               size={{ base: "sm", md: "md" }}
             >
-              Weekly Report
+              Reports
             </Button>
             
             {userRole === 'admin' && (
@@ -371,25 +361,9 @@ const OfficerNavbar = () => {
                   
                   <Button
                     variant="ghost"
-                    leftIcon={<FiCalendar />}
-                    onClick={() => {
-                      navigate('/officer/daily-report');
-                      onClose();
-                    }}
-                    w="full"
-                    justifyContent="flex-start"
-                    size="lg"
-                    borderRadius="md"
-                    colorScheme="green"
-                  >
-                    Daily Report
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
                     leftIcon={<FiBarChart2 />}
                     onClick={() => {
-                      navigate('/officer/weekly-report');
+                      navigate('/dash/reports');
                       onClose();
                     }}
                     w="full"
@@ -398,7 +372,7 @@ const OfficerNavbar = () => {
                     borderRadius="md"
                     colorScheme="purple"
                   >
-                    Weekly Report
+                    Reports
                   </Button>
                   
                   {userRole === 'admin' && (
