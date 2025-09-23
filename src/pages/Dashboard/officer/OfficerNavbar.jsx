@@ -183,7 +183,7 @@ const OfficerNavbar = () => {
               Dashboard
             </Button>
             
-            <Button
+            {/* <Button
               variant="ghost"
               leftIcon={<FiBarChart2 />}
               onClick={() => navigate('/dash/reports')}
@@ -191,7 +191,7 @@ const OfficerNavbar = () => {
               size={{ base: "sm", md: "md" }}
             >
               Reports
-            </Button>
+            </Button> */}
             
             {userRole === 'admin' && (
               <Button
@@ -348,7 +348,7 @@ const OfficerNavbar = () => {
                     variant="ghost"
                     leftIcon={<FiHome />}
                     onClick={() => {
-                      navigate('/officer/dashboard');
+                      navigate('/dashboard');
                       onClose();
                     }}
                     w="full"
@@ -359,7 +359,7 @@ const OfficerNavbar = () => {
                     Dashboard
                   </Button>
                   
-                  <Button
+                  {/* <Button
                     variant="ghost"
                     leftIcon={<FiBarChart2 />}
                     onClick={() => {
@@ -373,7 +373,7 @@ const OfficerNavbar = () => {
                     colorScheme="purple"
                   >
                     Reports
-                  </Button>
+                  </Button> */}
                   
                   {userRole === 'admin' && (
                     <Button

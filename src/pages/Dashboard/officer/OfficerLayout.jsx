@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import OfficerNavbar from './OfficerNavbar';
-import CollectionOfficerDashboard from './CollectionOfficerDashboard';
+import CollectionOfficerDashboard from '../CollectionOfficerDashboard';
 import ViewLoanUser from './ViewLoanUser';
 import ViewSavingUser from './ViewSavingUser';
 import DailyReport from './DailyReport';
@@ -27,8 +27,8 @@ const OfficerLayout = () => {
         <Route path="/weekly-report" element={<WeeklyReport />} />
         
         {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/officer/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/officer/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </div>
   );

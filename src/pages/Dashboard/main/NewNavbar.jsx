@@ -134,7 +134,7 @@ const NewNavbar = () => {
           <span>Dashboard</span>
         </button>
         
-        <button
+        {/* <button
           onClick={() => navigate('/dash/daily-report')}
           className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
         >
@@ -148,7 +148,7 @@ const NewNavbar = () => {
         >
           <FiBarChart2 size={18} />
           <span>Weekly Report</span>
-        </button>
+        </button> */}
       </div>
 
       {/* User Name in Center (Mobile Only) */}
@@ -312,7 +312,7 @@ const NewNavbar = () => {
               <span>Dashboard</span>
             </button>
             
-            <button
+            {/* <button
               onClick={() => {
                 navigate('/dash/daily-report');
                 closeMobileMenu();
@@ -332,7 +332,7 @@ const NewNavbar = () => {
             >
               <FiBarChart2 size={20} />
               <span>Weekly Report</span>
-            </button>
+            </button> */}
           </div>
         </div>
       )}
