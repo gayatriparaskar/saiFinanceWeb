@@ -100,7 +100,7 @@ const NewLogin = () => {
             redirectPath = '/accounter/dashboard';
             break;
           case 'collection_officer':
-            redirectPath = '/dashboard';
+            redirectPath = '/officer/dashboard';
             break;
           default:
             redirectPath = '/dash/home';

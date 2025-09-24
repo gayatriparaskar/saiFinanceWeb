@@ -55,7 +55,7 @@ const Mainroute = () => {
         element={
           <Navigate to={
             isAuthenticated 
-              ? (userType === 'officer' ? "/dashboard" : "/dash/home")
+              ? (userType === 'officer' ? "/officer/dashboard" : "/dash/home")
               : "/login"
           } replace />
         }
@@ -73,7 +73,7 @@ const Mainroute = () => {
 
       {/* Protected Officer Dashboard Routes */}
       <Route
-        path='/'
+        path='/officer/*'
         element={
           <ProtectedRoute>
             <OfficerLayout />
@@ -117,7 +117,7 @@ const Mainroute = () => {
         element={
           <Navigate to={
             isAuthenticated 
-              ? (userType === 'officer' ? "/dashboard" : "/dash/home")
+              ? (userType === 'officer' ? "/officer/dashboard" : "/dash/home")
               : "/login"
           } replace />
         }

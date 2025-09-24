@@ -6,6 +6,7 @@ import ViewLoanUser from './ViewLoanUser';
 import ViewSavingUser from './ViewSavingUser';
 import DailyReport from './DailyReport';
 import WeeklyReport from './WeeklyReport';
+import Reports from '../Reports';
 
 const OfficerLayout = () => {
   return (
@@ -23,12 +24,13 @@ const OfficerLayout = () => {
         <Route path="/viewSaving/:id" element={<ViewSavingUser />} />
         
         {/* Report Routes */}
+        <Route path="/reports" element={<Reports />} />
         <Route path="/daily-report" element={<DailyReport />} />
         <Route path="/weekly-report" element={<WeeklyReport />} />
         
         {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/officer/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/officer/dashboard" replace />} />
       </Routes>
     </div>
   );

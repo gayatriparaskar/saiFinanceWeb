@@ -183,15 +183,15 @@ const OfficerNavbar = () => {
               Dashboard
             </Button>
             
-            {/* <Button
+            <Button
               variant="ghost"
               leftIcon={<FiBarChart2 />}
-              onClick={() => navigate('/dash/reports')}
+              onClick={() => navigate('/officer/reports')}
               colorScheme="purple"
               size={{ base: "sm", md: "md" }}
             >
               Reports
-            </Button> */}
+            </Button>
             
             {userRole === 'admin' && (
               <Button

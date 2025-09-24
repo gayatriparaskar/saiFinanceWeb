@@ -20,7 +20,7 @@ This document outlines the implementation of officer login functionality in the 
 - **Persistent Storage**: Stores user type and role in localStorage
 
 ### 3. **Collection Officer Dashboard**
-- **File**: `src/pages/Dashboard/officer/CollectionOfficerDashboard.jsx`
+- **File**: `src/pages/Dashboard/CollectionOfficerDashboard.jsx`
 - **Features**:
   - Today's performance metrics
   - Overall performance statistics
