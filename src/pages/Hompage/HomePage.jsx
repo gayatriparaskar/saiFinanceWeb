@@ -1377,7 +1377,7 @@ const HomePage = () => {
                       {getText("officer_pin")}
                     </FormLabel>
                     <Input
-                      type="text"
+                      type="password"
                       value={collected_officer_code}
                       onChange={(e) => setPin(e.target.value)}
                       placeholder={getText("enter_officer_pin")}
@@ -1479,7 +1479,7 @@ const HomePage = () => {
                       {getText("officer_pin")}
                     </FormLabel>
                     <Input
-                      type="text"
+                      type="password"
                       value={collected_officer_code}
                       onChange={(e) => setPin(e.target.value)}
                       placeholder={getText("enter_officer_pin")}
@@ -1675,7 +1675,7 @@ const HomePage = () => {
                       {getText("officer_pin")}
                     </FormLabel>
                     <Input
-                      type="text"
+                      type="password"
                       value={collected_officer_code}
                       onChange={(e) => setPin(e.target.value)}
                       placeholder={getText("enter_officer_pin")}
