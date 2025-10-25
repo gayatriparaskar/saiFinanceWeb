@@ -10,16 +10,7 @@ const DashHome = () => {
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [pin, setPin] = useState("");
-  const [userData, setUserData] = useState({
-    name: "John Doe",
-    date: "2025-03-01",
-    mobile: "+1 234 567 890",
-    loan: "$5000",
-    emi: "$250",
-    totalPaid: "$1500",
-    due: "$3500",
-    penalty: "$100",
-  });
+  const [userData, setUserData] = useState();
 
   // Open the modal to add an amount
   const openAmountModal = () => {

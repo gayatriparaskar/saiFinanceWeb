@@ -6,6 +6,7 @@ import { Riple } from 'react-loading-indicators';
 import HomePage from "../../Hompage/HomePage";
 import DailyReport from "../main/DailyReport";
 import WeeklyReport from "../main/WeeklyReport";
+import UserAccountDetails from "../userPanal/UserAccountDetails";
 
 const DashRoute = () => {
   // const token = localStorage.getItem("token");
@@ -35,6 +36,7 @@ const DashRoute = () => {
 
           {/* User Routes */}
           <Route path='/home' element={<HomePage />} />
+          <Route path='/account-details' element={<UserAccountDetails />} />
           
           {/* Report Routes */}
           <Route path='/daily-report' element={<DailyReport />} />

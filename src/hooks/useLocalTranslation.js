@@ -1,0 +1,53 @@
+import { useTranslation } from 'react-i18next';
+import { getTranslation } from '../utils/translations.js';
+import { useEffect, useState, useCallback } from 'react';
+
+export const useLocalTranslation = () => {
+  const { t: i18nT, i18n } = useTranslation();
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language || 'en');
+  const [, forceUpdate] = useState({});
+
+  // Force component re-render
+  const forceRerender = useCallback(() => {
+    forceUpdate({});
+  }, []);
+
+  // Listen to language changes
+  useEffect(() => {
+    const handleLanguageChange = (lng) => {
+      setCurrentLanguage(lng);
+      // Force all components using this hook to re-render
+      forceRerender();
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n, forceRerender]);
+
+  const t = (key, fallback = key) => {
+    // First try to get from i18next (this ensures reactivity to language changes)
+    try {
+      const i18nextTranslation = i18nT(key);
+      // Check if we actually got a translation (not just the key back)
+      if (i18nextTranslation && i18nextTranslation !== key) {
+        return i18nextTranslation;
+      }
+    } catch (error) {
+      // If i18next fails, continue to local translations
+    }
+
+    // Then try to get from our local translations
+    const localTranslation = getTranslation(key, currentLanguage);
+    if (localTranslation && localTranslation !== key) {
+      return localTranslation;
+    }
+
+    // Finally use fallback (which should be English text)
+    return fallback;
+  };
+
+  return { t, currentLanguage };
+};

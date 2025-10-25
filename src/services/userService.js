@@ -43,3 +43,49 @@ export const getUserProfile = async () => {
     throw error;
   }
 };
+
+/**
+ * Get user details by ID
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} User details with loan and saving account info
+ */
+export const getUserDetails = async (userId) => {
+  try {
+    console.log('🔄 Fetching user details for:', userId);
+    
+    const response = await axios.get(`users/${userId}`);
+    
+    if (response.data && response.data.success) {
+      console.log('✅ User details fetched successfully');
+      return response.data;
+    } else {
+      throw new Error(response.data?.message || 'Failed to fetch user details');
+    }
+  } catch (error) {
+    console.error('❌ Error fetching user details:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get user's daily collections
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} User's daily collections
+ */
+export const getUserDailyCollections = async (userId) => {
+  try {
+    console.log('🔄 Fetching daily collections for:', userId);
+    
+    const response = await axios.get(`dailyCollections/${userId}`);
+    
+    if (response.data && response.data.success) {
+      console.log('✅ Daily collections fetched successfully');
+      return response.data;
+    } else {
+      throw new Error(response.data?.message || 'Failed to fetch daily collections');
+    }
+  } catch (error) {
+    console.error('❌ Error fetching daily collections:', error);
+    throw error;
+  }
+};

@@ -5,7 +5,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 
 import { IoMdLogOut } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
-import { FiGlobe, FiKey, FiMenu, FiHome, FiCalendar, FiBarChart2 } from "react-icons/fi";
+import { FiGlobe, FiKey, FiMenu, FiHome, FiCalendar, FiBarChart2, FiUser } from "react-icons/fi";
 import PasswordChangeModal from "../../../components/PasswordChangeModal";
 import { changeUserPassword } from "../../../services/userService";
 
@@ -132,6 +132,14 @@ const NewNavbar = () => {
         >
           <FiHome size={18} />
           <span>Dashboard</span>
+        </button>
+        
+        <button
+          onClick={() => navigate('/dash/account-details')}
+          className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+        >
+          <FiUser size={18} />
+          <span>My Account</span>
         </button>
         
         {/* <button
@@ -310,6 +318,17 @@ const NewNavbar = () => {
             >
               <FiHome size={20} />
               <span>Dashboard</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                navigate('/dash/account-details');
+                closeMobileMenu();
+              }}
+              className="w-full flex items-center space-x-3 p-3 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+            >
+              <FiUser size={20} />
+              <span>My Account</span>
             </button>
             
             {/* <button

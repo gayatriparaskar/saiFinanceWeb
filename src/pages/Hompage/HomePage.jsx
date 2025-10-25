@@ -978,11 +978,32 @@ const HomePage = () => {
                       </CardBody>
                     </Card>
                   </MotionBox>
+                  <MotionBox
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                  >
+                    <Card bg="#eff6ff" borderLeft="4px solid #3b82f6">
+                      <CardBody p={4} textAlign="center">
+                        <Text fontSize="sm" color="gray.600" mb={1}>
+                          Total Pay 
+                        </Text>
+                        <Text
+                          fontSize={{ base: "xl", md: "2xl" }}
+                          fontWeight="bold"
+                          color="#1e40af"
+                        >
+                          ₹{totalPaid - totalDue}
+                        </Text>
+                      </CardBody>
+                    </Card>
+                  </MotionBox>
                 </Grid>
               </>
             )}
           </CardBody>
         </MotionCard>
+        
 
         {/* Action Buttons - Conditional based on account type */}
         <MotionBox

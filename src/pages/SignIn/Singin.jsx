@@ -31,59 +31,92 @@ const Signin = () => {
  }
 
   return (
-    <div className="bg-bgBlue">
-      <div className="h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full flex items-center  ">
-        <div className=" w-1/2 flex justify-center items-center">
-          <img src={loginImage} alt="" />
-        </div>
-        <div className="w-1/2   p-8 bg-bgBlue rounded-xl ">
-          <div className="w-full flex flex-col ">
-            <div className="self-center text-xl font-semibold flex items-center bg-transparent">
-              <img src={logo} alt="" className="w-48" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-teal-600">
+      <div className="w-full max-w-6xl">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-8">
+          {/* Left Side - Image */}
+          <div className="hidden lg:flex lg:w-1/2 justify-center">
+            <div className="relative">
+              <img 
+                src={loginImage} 
+                alt="Login Illustration" 
+                className="w-full max-w-md h-auto drop-shadow-lg"
+              />
             </div>
-            <p className="mt-2 text-md text-white ">
-              Admin Login
-            </p>
           </div>
 
-          <form className="w-2/3 m-auto mt-8 space-y-6" method="POST" onSubmit={handleLogin}>
-            <div className=" flex flex-col">
-              <label className="text-sm font-bold text-purple tracking-wide text-start mb-2">
-                Email
-              </label>
-              <input
-                className=" w-full rounded-xl p-2 text-base py-2 border-b border-gray-300 focus:outline-none focus:border-indigo-500"
-                name="email"
-                placeholder="User Id"
-                value={email}
-                onChange={(e)=>setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="mt-8 text-start flex flex-col">
-              <label className="text-sm font-bold text-purple  tracking-wide text-start mb-2">
-                Password
-              </label>
-              <input
-                className=" w-full rounded-xl p-2 text-base py-2 border-b border-gray-300 focus:outline-none focus:border-indigo-500"
-                type="password"
-                placeholder="password"
-                value={password}
-                onChange={(e)=>setPassword(e.target.value)}
-                required
-              />
-            </div>
+          {/* Right Side - Login Form */}
+          <div className="w-full lg:w-1/2">
+            {/* Simple and Sweet Container */}
+            <div className="bg-white rounded-3xl shadow-2xl p-8">
+              
+              {/* Logo */}
+              <div className="text-center mb-8">
+                <img src={logo} alt="Logo" className="w-32 mx-auto" />
+              </div>
 
-            <div className="bg-purple rounded-xl">
-              <button className="text-white p-2 text-xl font-bold" type="submit">
-                Login
-              </button>
+              {/* Header */}
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-bold text-teal-800 mb-2">
+                  Admin Login
+                </h1>
+                <p className="text-teal-600 text-sm">
+                  Secure access to your dashboard
+                </p>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleLogin} className="space-y-6">
+                {/* Email Field */}
+                <div className="relative">
+                  <label className="block text-sm font-medium text-teal-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    className="w-full px-4 py-3 border border-teal-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-teal-50"
+                    name="email"
+                    placeholder="User Id"
+                    value={email}
+                    onChange={(e)=>setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Password Field */}
+                <div className="relative">
+                  <label className="block text-sm font-medium text-teal-700 mb-2">
+                    Password
+                  </label>
+                  <input
+                    className="w-full px-4 py-3 border border-teal-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-teal-50"
+                    type="password"
+                    placeholder="password"
+                    value={password}
+                    onChange={(e)=>setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Login Button */}
+                <div className="pt-4">
+                  <button
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 text-lg shadow-lg hover:shadow-xl"
+                    type="submit"
+                  >
+                    Login
+                  </button>
+                </div>
+              </form>
+
+              {/* Footer */}
+              <div className="mt-6 text-center">
+                <p className="text-teal-500 text-xs">
+                  Secure login powered by Sai Finance
+                </p>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
-        </div>
-       
       </div>
     </div>
   );
