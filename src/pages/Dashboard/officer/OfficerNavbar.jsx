@@ -359,11 +359,11 @@ const OfficerNavbar = () => {
                     Dashboard
                   </Button>
                   
-                  {/* <Button
+                  <Button
                     variant="ghost"
                     leftIcon={<FiBarChart2 />}
                     onClick={() => {
-                      navigate('/dash/reports');
+                      navigate('/officer/reports');
                       onClose();
                     }}
                     w="full"
@@ -373,7 +373,7 @@ const OfficerNavbar = () => {
                     colorScheme="purple"
                   >
                     Reports
-                  </Button> */}
+                  </Button>
                   
                   {userRole === 'admin' && (
                     <Button

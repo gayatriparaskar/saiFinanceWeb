@@ -26,7 +26,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ViewIcon } from '@chakra-ui/icons';
-
+import axios from '../../../axios'
 const CollectionOfficerDashboard = () => {
   const { user, isLoading: authLoading } = useAuth();
   const toast = useToast();
@@ -47,12 +47,100 @@ const CollectionOfficerDashboard = () => {
     todayCount: 0
   });
   const [assignedUsers, setAssignedUsers] = useState([]);
+  const [officerAssignUSers,setOfficerAssignUsers] = useState([]);
+  const [form, setForm] = useState({
+  assignTo: "officer",
+  status: "Pending",
+  paymentProcess: "officer",
+  assignedToManager: null,
+  assignedToAccounter: null,
+});
 
   useEffect(() => {
     if (user && !authLoading) {
       fetchOfficerData();
     }
   }, [user, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+const fetchOfficerWiseCollections = async ({ officerId, period }) => {
+
+  const endpointMap = {
+    daily: "admins/officerWiseDailyCollections",
+    weekly: "admins/officerWiseWeeklyCollections",
+    monthly: "admins/officerWiseMonthlyCollections",
+  };
+
+  const date = new Date().toISOString().split("T")[0];
+
+  const { data } = await axios.get(endpointMap[period], {
+    params: { officerId, date },
+  });
+
+  /* 🔥 STEP 1: All officers data */
+  const allOfficers = data?.result?.collections || [];
+
+  /* 🔥 STEP 2: Only logged-in officer */
+  const officerData = allOfficers.find(
+    o => String(o.officer_id) === String(officerId)
+  );
+
+  if (!officerData) {
+    // officer ka aaj koi collection nahi
+    if (period === "daily") {
+      setTodayStats({
+        todayAmount: 0,
+        todayLoans: 0,
+        todaySavings: 0,
+        todayCount: 0,
+      });
+    }
+
+    if (period === "monthly") {
+      setTotalCollections({
+        totalAmount: 0,
+        totalLoans: 0,
+        totalSavings: 0,
+        pendingCollections: 0,
+      });
+    }
+    return;
+  }
+
+  const loanAmount = Number(officerData.loan_amount || 0);
+  const savingAmount = Number(officerData.saving_amount || 0);
+  const totalAmount = Number(officerData.total_amount || 0);
+  const count = officerData.collections?.length || 0;
+
+  /* 🔥 STEP 3: SET STATE */
+  if (period === "daily") {
+    setTodayStats({
+      todayAmount: totalAmount,
+      todayLoans: loanAmount,
+      todaySavings: savingAmount,
+      todayCount: count,
+    });
+  }
+
+
+    setTotalCollections({
+      totalAmount,
+      totalLoans: loanAmount,
+      totalSavings: savingAmount,
+      pendingCollections: 0,
+    });
+  
+};
+
+
+useEffect(() => {
+  if (!user?._id) return;
+
+  fetchOfficerWiseCollections({
+    officerId: user._id,
+    period: "daily",
+  });
+
+},[]);
 
 
   const fetchOfficerData = async () => {
@@ -101,12 +189,12 @@ const CollectionOfficerDashboard = () => {
       }
       
       // Set total collections from officer model fields
-      setTotalCollections({
-        totalAmount: (officerData.totalLoanAmount || 0) + (officerData.totalSavingAmount || 0),
-        totalLoans: officerData.totalLoanAmount || 0,
-        totalSavings: officerData.totalSavingAmount || 0,
-        pendingCollections: officerData.user_collections?.filter(c => c.collected_amount === 0).length || 0
-      });
+      // setTotalCollections({
+      //   totalAmount: (officerData.totalLoanAmount || 0) + (officerData.totalSavingAmount || 0),
+      //   totalLoans: officerData.totalLoanAmount || 0,
+      //   totalSavings: officerData.totalSavingAmount || 0,
+      //   pendingCollections: officerData.user_collections?.filter(c => c.collected_amount === 0).length || 0
+      // });
       
       // Calculate today's collections for this specific officer
       const today = new Date().toISOString().split('T')[0];
@@ -179,13 +267,18 @@ const CollectionOfficerDashboard = () => {
           totalTodayAmount: todayLoanAmount + todaySavingAmount,
           totalTodayCount: todayLoanCollections.length + todaySavingCollections.length
         });
+          // ✅ TODAY
+    const todayData = await fetchOfficerWiseCollections({
+      officerId: user._id,
+      period: "daily",
+    });
         
-      setTodayStats({
-          todayAmount: todayLoanAmount + todaySavingAmount,
-          todayLoans: todayLoanAmount,
-          todaySavings: todaySavingAmount,
-          todayCount: todayLoanCollections.length + todaySavingCollections.length
-        });
+    //    setTodayStats({
+    //   todayAmount: todayData.totalAmount,
+    //   todayLoans: todayData.loanAmount,
+    //   todaySavings: todayData.savingAmount,
+    //   todayCount: 0, // optional
+    // });
       } else {
         // Use officer model fields (preferred method)
         // Calculate counts from collections data
@@ -379,12 +472,12 @@ const CollectionOfficerDashboard = () => {
           officerModelAmount: officerTodayLoanAmount + officerTodaySavingAmount
         });
         
-        setTodayStats({
-          todayAmount: totalTodayAmount > 0 ? totalTodayAmount : (officerTodayLoanAmount + officerTodaySavingAmount),
-          todayLoans: finalLoanAmount, // Amount, not count
-          todaySavings: finalSavingAmount, // Amount, not count
-          todayCount: finalLoanCount + finalSavingCount // Total count (for reference)
-        });
+        // setTodayStats({
+        //   todayAmount: totalTodayAmount > 0 ? totalTodayAmount : (officerTodayLoanAmount + officerTodaySavingAmount),
+        //   todayLoans: finalLoanAmount, // Amount, not count
+        //   todaySavings: finalSavingAmount, // Amount, not count
+        //   todayCount: finalLoanCount + finalSavingCount // Total count (for reference)
+        // });
       }
       
       // Set daily collections from user_collections array1
@@ -440,7 +533,7 @@ const CollectionOfficerDashboard = () => {
       const usersResponse = await axios.get('/users');
       const allUsers = usersResponse.data.result || [];
       console.log('🔍 All users fetched:', allUsers.length);
-      
+    
       // Filter users assigned to this officer  
       const assignedUsers = allUsers.filter(userRecord => 
         userRecord.officer_id && userRecord.officer_id._id === user._id
@@ -605,7 +698,12 @@ const CollectionOfficerDashboard = () => {
       
       console.log('✅ Final users with collection data:', finalUsers);
       setAssignedUsers(finalUsers);
-      
+         const officerResponse = await axios.get(`officers/${allUsers?.officerId || user?._id}`);
+         const data = officerResponse.data.result.user_collections;
+
+         console.log(data,"officerResponse");
+         
+           setOfficerAssignUsers(data)
     } catch (error) {
       console.error('Error fetching officer data:', error);
       toast({
@@ -658,7 +756,35 @@ const CollectionOfficerDashboard = () => {
       });
     }
   };
+console.log(user._id,"userrr");
 
+  const handleUpdate = async () => {
+  await axios.put(`/officers/${user._id}`, {
+    assignTo: form.assignTo,
+    status: form.status,
+    paymentProcess: form.paymentProcess,
+    assignedToManager: form.assignedToManager,
+    assignedToAccounter: form.assignedToAccounter,
+  });
+};
+
+
+  const getRemainingDays = (user) => {
+  const currentDate = new Date();
+  let endDate;
+
+  if (user?.end_date) {
+    endDate = new Date(user.end_date);
+  } else if (user.created_on) {
+    const createdDate = new Date(user.created_on);
+    endDate = new Date(createdDate.getTime() + 120 * 24 * 60 * 60 * 1000);
+  } else {
+    endDate = new Date(currentDate.getTime() + 120 * 24 * 60 * 60 * 1000);
+  }
+
+  const timeDiff = endDate - currentDate;
+  return Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+};
   // Show loading state while authentication is loading or user data is not available
   if (authLoading || loading || !user) {
     return (
@@ -817,6 +943,111 @@ const CollectionOfficerDashboard = () => {
         </Grid>
       </motion.div>
 
+<div className="overflow-x-auto">
+  <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+    <thead className="bg-gray-100 hidden md:table-header-group">
+      <tr>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Assign To</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Payment Process</th>
+        {/* <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Assigned To Manager</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Assigned To Accounter</th> */}
+        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
+      </tr>
+    </thead>
+
+    <tbody className="divide-y divide-gray-200">
+      <tr className="block md:table-row bg-white">
+        {/* Assign To */}
+        <td className="px-4 py-3 block md:table-cell">
+          <span className="md:hidden text-xs font-medium text-gray-500">Assign To</span>
+          <select
+            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={form.assignTo}
+            onChange={(e) =>
+              setForm({ ...form, assignTo: e.target.value })
+            }
+          >
+            <option value="accounter">Accounter</option>
+            <option value="manager">Manager</option>
+          </select>
+        </td>
+
+        {/* Status */}
+        <td className="px-4 py-3 block md:table-cell">
+          <span className="md:hidden text-xs font-medium text-gray-500">Status</span>
+          <select
+            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={form.status}
+            onChange={(e) =>
+              setForm({ ...form, status: e.target.value })
+            }
+          >
+            <option value="Pending">Pending</option>
+            <option value="In Process">In Process</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </td>
+
+        {/* Payment Process */}
+        <td className="px-4 py-3 block md:table-cell">
+          <span className="md:hidden text-xs font-medium text-gray-500">Payment Process</span>
+          <select
+            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={form.paymentProcess}
+            onChange={(e) =>
+              setForm({ ...form, paymentProcess: e.target.value })
+            }
+          >
+            <option value="officer">Officer</option>
+            <option value="manager">Manager</option>
+            <option value="accounter">Accounter</option>
+            <option value="deposite to bank">Deposite to Bank</option>
+           
+          </select>
+        </td>
+
+        {/* Assigned To Manager */}
+        {/* <td className="px-4 py-3 block md:table-cell">
+          <span className="md:hidden text-xs font-medium text-gray-500">Assigned To Manager</span>
+          <input
+            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Manager ID"
+            value={form.assignedToManager || ""}
+            onChange={(e) =>
+              setForm({ ...form, assignedToManager: e.target.value || null })
+            }
+          />
+        </td> */}
+
+        {/* Assigned To Accounter */}
+        {/* <td className="px-4 py-3 block md:table-cell">
+          <span className="md:hidden text-xs font-medium text-gray-500">Assigned To Accounter</span>
+          <input
+            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Accounter ID"
+            value={form.assignedToAccounter || ""}
+            onChange={(e) =>
+              setForm({ ...form, assignedToAccounter: e.target.value || null })
+            }
+          />
+        </td> */}
+
+        {/* Action */}
+        <td className="px-4 py-4 block md:table-cell text-right md:text-center">
+          <button
+            onClick={handleUpdate}
+            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition"
+          >
+            Update
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
       {/* Recent Collections */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -903,7 +1134,7 @@ const CollectionOfficerDashboard = () => {
       >
         <HStack justify="space-between" mb={4}>
           <Text fontSize="xl" fontWeight="semibold" color="gray.700">
-            Assigned Customers ({assignedUsers.length})
+            Assigned Customers ({officerAssignUSers.length})
           </Text>
           <Button
             size="sm"
@@ -917,14 +1148,14 @@ const CollectionOfficerDashboard = () => {
 
         <Card bg="white" shadow="md" borderRadius="lg">
           <CardBody p={6}>
-            {assignedUsers.length > 0 ? (
+            {officerAssignUSers.length > 0 ? (
               <TableContainer overflowX="auto">
                 <Table variant="simple" size="sm" minW="1800px">
                   <Thead>
                     <Tr>
                       <Th>User Details</Th>
                       <Th>Account Type</Th>
-                      <Th>Status</Th>
+                      {/* <Th>Status</Th> */}
                       <Th>Principal Amount</Th>
                       <Th>Total with Interest</Th>
                       <Th>Current Amount</Th>
@@ -934,12 +1165,12 @@ const CollectionOfficerDashboard = () => {
                       <Th>Start Date</Th>
                       <Th>End Date</Th>
                       <Th>Penalty</Th>
-                      <Th>Last Collection</Th>
+                      {/* <Th>Last Collection</Th> */}
                       <Th>Actions</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {assignedUsers.map((assignedUser, index) => (
+                    {officerAssignUSers.map((assignedUser, index) => (
                       <motion.tr
                         key={assignedUser?.user_id || index}
                         initial={{ opacity: 0, y: 20 }}
@@ -970,7 +1201,7 @@ const CollectionOfficerDashboard = () => {
                             {assignedUser?.account_type === 'loan account' ? 'Loan' : 'Saving'}
                           </Badge>
                         </Td>
-                        <Td>
+                        {/* <Td>
                           <Badge 
                             colorScheme={
                               assignedUser?.status === 'Active' ? 'green' : 
@@ -983,11 +1214,11 @@ const CollectionOfficerDashboard = () => {
                           >
                             {assignedUser?.status || 'Unknown'}
                           </Badge>
-                        </Td>
+                        </Td> */}
                         <Td>
                           <VStack align="start" spacing={1}>
                             <Text fontWeight="semibold" color="blue.600" fontSize="sm">
-                              {formatCurrency(assignedUser?.principal_amount || 0)}
+                              {formatCurrency(assignedUser?.total_amount || 0)}
                             </Text>
                             <Text fontSize="xs" color="gray.500">
                               (principal)
@@ -1007,7 +1238,7 @@ const CollectionOfficerDashboard = () => {
                         <Td>
                           <VStack align="start" spacing={1}>
                             <Text fontWeight="semibold" color="purple.600" fontSize="sm">
-                              {formatCurrency(assignedUser?.current_amount || 0)}
+                              {formatCurrency(assignedUser?.current_amount || assignedUser?.collected_amount)}
                             </Text>
                             <Text fontSize="xs" color="gray.500">
                               (paid/saved)
@@ -1017,7 +1248,7 @@ const CollectionOfficerDashboard = () => {
                         <Td>
                           <VStack align="start" spacing={1}>
                             <Text fontWeight="semibold" color="red.600" fontSize="sm">
-                              {formatCurrency(assignedUser?.current_total_due_amount || 0)}
+                              {formatCurrency(assignedUser?.total_due_amount - (assignedUser.current_amount || assignedUser.collected_amount) || 0)}
                             </Text>
                             <Text fontSize="xs" color="gray.500">
                               (remaining)
@@ -1026,13 +1257,13 @@ const CollectionOfficerDashboard = () => {
                         </Td>
                         <Td>
                           <Text fontWeight="semibold" color="green.600" fontSize="sm">
-                            {formatCurrency(assignedUser?.emi_day || 0)}
+                            {formatCurrency(assignedUser?.emiAmount || 0)}
                           </Text>
                         </Td>
                         <Td>
                           <VStack align="start" spacing={1}>
                             <Text fontSize="sm" color="gray.700" fontWeight="semibold">
-                              {assignedUser?.remaining_emi_days || 0} days
+                              {getRemainingDays(assignedUser) || 0} days
                             </Text>
                             {assignedUser?.remaining_emi_days > 0 && (
                               <Box 
@@ -1071,7 +1302,7 @@ const CollectionOfficerDashboard = () => {
                             {formatCurrency(assignedUser?.penalty || 0)}
                           </Text>
                         </Td>
-                        <Td>
+                        {/* <Td>
                           <VStack align="start" spacing={1}>
                             <Text fontSize="xs" color="gray.700">
                               {assignedUser?.last_collected_on ? formatDate(assignedUser.last_collected_on) : 'N/A'}
@@ -1082,7 +1313,7 @@ const CollectionOfficerDashboard = () => {
                               </Text>
                             )}
                           </VStack>
-                        </Td>
+                        </Td> */}
                         <Td>
                           <Tooltip label="View User Details" placement="top">
                             <IconButton

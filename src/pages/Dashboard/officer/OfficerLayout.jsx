@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import OfficerNavbar from './OfficerNavbar';
-import CollectionOfficerDashboard from '../CollectionOfficerDashboard';
+import CollectionOfficerDashboard from './CollectionOfficerDashboard_old';
 import ViewLoanUser from './ViewLoanUser';
 import ViewSavingUser from './ViewSavingUser';
 import DailyReport from './DailyReport';

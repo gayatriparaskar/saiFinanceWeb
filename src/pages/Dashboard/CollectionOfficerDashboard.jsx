@@ -221,6 +221,24 @@ function CollectionOfficerDashboard() {
     setEditingField(null);
   };
 
+  const getRemainingDays = (user) => {
+  const currentDate = new Date();
+  let endDate;
+
+  if (user?.end_date) {
+    endDate = new Date(user.end_date);
+  } else if (user.created_on) {
+    const createdDate = new Date(user.created_on);
+    endDate = new Date(createdDate.getTime() + 120 * 24 * 60 * 60 * 1000);
+  } else {
+    endDate = new Date(currentDate.getTime() + 120 * 24 * 60 * 60 * 1000);
+  }
+
+  const timeDiff = endDate - currentDate;
+  return Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+};
+
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -254,32 +272,7 @@ function CollectionOfficerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 ">
       {/* Navbar */}
-      <motion.nav 
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="fixed top-0 left-0 right-0 bg-transparent shadow-none border-b-0 z-50"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                     <div className="flex justify-between items-center h-14 sm:h-16">
-             {/* Left side - Logo */}
-             <div className="flex items-center gap-2 sm:gap-3">
-               <img src="/Sai-removebg-preview.png" alt="Sai Finance" className="h-6 sm:h-7 w-auto" />
-             </div>
-
-             {/* Center - Officer Name and Type */}
-             <div className="flex flex-col items-center text-center">
-               <h1 className="text-lg sm:text-xl font-bold text-gray-800">{officerName}</h1>
-               <p className="text-sm text-gray-600">Collection Officer</p>
-             </div>
-
-             {/* Right side - Empty for balance */}
-             <div className="w-20 sm:w-24"></div>
-           </div>
-        </div>
-
-
-      </motion.nav>
-
+     
       {/* Main Content */}
       <motion.div
         initial="hidden"
@@ -463,7 +456,7 @@ function CollectionOfficerDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ₹{user.emi_amount || 0}
+                          ₹{user.emiAmount || 0}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           ₹{user.total_amount || 0}
@@ -475,7 +468,7 @@ function CollectionOfficerDashboard() {
                           ₹{user.total_due_amount || 0}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.remaining_emi_days || 0} days
+                          {getRemainingDays(user)} days
                          </td>
                          <td className="px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">

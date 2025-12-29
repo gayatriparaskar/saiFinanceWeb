@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { motion } from 'framer-motion';
-import { 
-  Box, 
-  Text, 
-  Button, 
-  Table, 
-  Thead, 
-  Tbody, 
-  Tr, 
-  Th, 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { motion } from "framer-motion";
+import {
+  Box,
+  Text,
+  Button,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
   Td,
   Badge,
   HStack,
@@ -23,28 +23,30 @@ import {
   StatArrow,
   Grid,
   GridItem,
-  useColorModeValue
-} from '@chakra-ui/react';
-import { 
-  FiTrendingUp, 
-  FiUsers, 
-  FiDollarSign, 
+  useColorModeValue,
+} from "@chakra-ui/react";
+import {
+  FiTrendingUp,
+  FiUsers,
+  FiDollarSign,
   FiCalendar,
   FiBarChart2,
   FiClock,
   FiChevronDown,
-  FiChevronRight
-} from 'react-icons/fi';
-
+  FiChevronRight,
+} from "react-icons/fi";
+import axios from '../../axios'
 // Weekly Report Table Component with Day-wise Grouping
 const WeeklyReportTable = ({ data }) => {
   const [expandedDays, setExpandedDays] = useState({});
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
 
   // Group collections by day
   const groupedByDay = data.reduce((acc, collection) => {
-    const dayName = new Date(collection.date).toLocaleDateString('en-US', { weekday: 'long' });
+    const dayName = new Date(collection.date).toLocaleDateString("en-US", {
+      weekday: "long",
+    });
     if (!acc[dayName]) {
       acc[dayName] = [];
     }
@@ -53,18 +55,29 @@ const WeeklyReportTable = ({ data }) => {
   }, {});
 
   // Sort days in week order
-  const dayOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const sortedDays = dayOrder.filter(day => groupedByDay[day]);
+  const dayOrder = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const sortedDays = dayOrder.filter((day) => groupedByDay[day]);
 
   const toggleDayExpansion = (day) => {
-    setExpandedDays(prev => ({
+    setExpandedDays((prev) => ({
       ...prev,
-      [day]: !prev[day]
+      [day]: !prev[day],
     }));
   };
 
   const getDayTotal = (day) => {
-    return groupedByDay[day].reduce((sum, collection) => sum + collection.totalAmount, 0);
+    return groupedByDay[day].reduce(
+      (sum, collection) => sum + collection.totalAmount,
+      0
+    );
   };
 
   const getDayCount = (day) => {
@@ -83,7 +96,8 @@ const WeeklyReportTable = ({ data }) => {
                   No collections found for weekly report
                 </Text>
                 <Text color="gray.400" fontSize="sm">
-                  Collections will appear here once you start collecting payments
+                  Collections will appear here once you start collecting
+                  payments
                 </Text>
               </VStack>
             </Td>
@@ -107,8 +121,8 @@ const WeeklyReportTable = ({ data }) => {
         {sortedDays.map((day) => (
           <React.Fragment key={day}>
             {/* Day Summary Row */}
-            <Tr 
-              _hover={{ bg: "gray.50" }} 
+            <Tr
+              _hover={{ bg: "gray.50" }}
               cursor="pointer"
               onClick={() => toggleDayExpansion(day)}
               bg={expandedDays[day] ? "blue.50" : "white"}
@@ -132,11 +146,11 @@ const WeeklyReportTable = ({ data }) => {
               </Td>
               <Td>
                 <Text fontSize="sm" color="gray.500">
-                  Click to {expandedDays[day] ? 'collapse' : 'expand'}
+                  Click to {expandedDays[day] ? "collapse" : "expand"}
                 </Text>
               </Td>
             </Tr>
-            
+
             {/* Expanded Day Details */}
             {expandedDays[day] && (
               <>
@@ -151,12 +165,16 @@ const WeeklyReportTable = ({ data }) => {
                     <Td>
                       <HStack>
                         <FiUsers color="#6B7280" />
-                        <Text fontWeight="medium" fontSize="sm">{collection.userName}</Text>
+                        <Text fontWeight="medium" fontSize="sm">
+                          {collection.userName}
+                        </Text>
                       </HStack>
                     </Td>
                     <Td>
                       <Badge
-                        colorScheme={collection.accountType === 'Loan' ? 'blue' : 'green'}
+                        colorScheme={
+                          collection.accountType === "Loan" ? "blue" : "green"
+                        }
                         variant="subtle"
                         px={2}
                         py={1}
@@ -197,134 +215,102 @@ const Reports = () => {
   const [reportData, setReportData] = useState({
     daily: [],
     weekly: [],
-    monthly: []
+    monthly: [],
   });
-  const [selectedReportType, setSelectedReportType] = useState('daily');
+  const [selectedReportType, setSelectedReportType] = useState("daily");
   const [reportLoading, setReportLoading] = useState(false);
   const [stats, setStats] = useState({
     totalCollections: 0,
     totalAmount: 0,
     loanCollections: 0,
-    savingCollections: 0
+    savingCollections: 0,
   });
 
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+
+  const REPORT_API_MAP = {
+    daily: "admins/officerWiseDailyCollections",
+    weekly: "admins/officerWiseWeeklyCollections",
+    monthly: "admins/officerWiseMonthlyCollections",
+  };
 
   useEffect(() => {
-    fetchReportData('daily');
+    fetchReportData(selectedReportType);
   }, []);
 
-  const fetchReportData = async (reportType) => {
-    try {
-      setReportLoading(true);
-      const axios = (await import('../../axios')).default;
-      
-      console.log(`🔄 Fetching ${reportType} report data...`);
-      
-      // Calculate date ranges based on report type
-      const now = new Date();
-      let startDate, endDate;
-      
-      switch (reportType) {
-        case 'daily':
-          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          endDate = new Date(startDate);
-          endDate.setDate(endDate.getDate() + 1);
-          break;
-        case 'weekly':
-          const startOfWeek = new Date(now);
-          startOfWeek.setDate(now.getDate() - now.getDay());
-          startDate = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate());
-          endDate = new Date(startDate);
-          endDate.setDate(endDate.getDate() + 7);
-          break;
-        case 'monthly':
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-          break;
-        default:
-          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          endDate = new Date(startDate);
-          endDate.setDate(endDate.getDate() + 1);
-      }
-      
-      // Fetch loan collections
-      const loanCollectionsResponse = await axios.get('dailyCollections', {
-        params: {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString()
-        }
-      });
-      
-      // Fetch saving collections
-      const savingCollectionsResponse = await axios.get('savingDailyCollections', {
-        params: {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString()
-        }
-      });
-      
-      const loanCollections = loanCollectionsResponse.data.result || [];
-      const savingCollections = savingCollectionsResponse.data.result || [];
-      
-      // Combine and format report data
-      const reportData = [
-        ...loanCollections.map(collection => ({
-          id: collection._id,
-          date: new Date(collection.created_on).toLocaleDateString(),
-          time: new Date(collection.created_on).toLocaleTimeString(),
-          userName: collection.user_id?.full_name || 'Unknown User',
-          accountType: 'Loan',
-          amount: collection.amount || 0,
-          penalty: collection.total_penalty_amount || 0,
-          totalAmount: (collection.amount || 0) + (collection.total_penalty_amount || 0)
-        })),
-        ...savingCollections.map(collection => ({
-          id: collection._id,
-          date: new Date(collection.created_on).toLocaleDateString(),
-          time: new Date(collection.created_on).toLocaleTimeString(),
-          userName: collection.user_id?.full_name || 'Unknown User',
-          accountType: 'Saving',
-          amount: collection.deposit_amount || 0,
-          penalty: 0,
-          totalAmount: collection.deposit_amount || 0
-        }))
-      ];
-      
-      // Sort by date (newest first)
-      reportData.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
-      
-      // Calculate stats
-      const totalCollections = reportData.length;
-      const totalAmount = reportData.reduce((sum, collection) => sum + collection.totalAmount, 0);
-      const loanCollectionsCount = reportData.filter(c => c.accountType === 'Loan').length;
-      const savingCollectionsCount = reportData.filter(c => c.accountType === 'Saving').length;
-      
-      setStats({
-        totalCollections,
-        totalAmount,
-        loanCollections: loanCollectionsCount,
-        savingCollections: savingCollectionsCount
-      });
-      
-      setReportData(prev => ({
-        ...prev,
-        [reportType]: reportData
-      }));
-      
-      console.log(`📊 ${reportType} report data loaded:`, reportData.length, 'collections');
-      
-    } catch (error) {
-      console.error(`❌ Error fetching ${reportType} report data:`, error);
-      setReportData(prev => ({
-        ...prev,
-        [reportType]: []
-      }));
-    } finally {
-      setReportLoading(false);
+
+const fetchReportData = async (reportType) => {
+  try {
+    setReportLoading(true);
+
+    const endpoint = REPORT_API_MAP[reportType];
+    const params = {};
+
+    /* 🔥 DATE (ONLY DAILY) */
+    if (reportType === "daily") {
+      params.date = new Date().toISOString().split("T")[0];
     }
-  };
+        console.log(user)
+    /* 🔥 OFFICER ID — ALWAYS SEND IF AVAILABLE */
+      params.officer_id = user._id || user.officer_id;
+    
+
+    const res = await axios.get(endpoint, { params });
+
+    /* 🔥 Backend already filtered by officer_id */
+    const officers = res.data?.result?.collections || [];
+
+    /* 🔁 Flatten data */
+   const flatData = officers
+  .filter(
+    (officer) =>
+      String(officer._id || officer.officer_id) ===
+      String(user?.officer_id?._id || user?._id)
+  )
+  .flatMap((officer) =>
+    officer.collections.map((col) => ({
+      id: `${officer.officer_id}-${col.user_id}-${col.created_on}`,
+      date: new Date(col.created_on).toLocaleDateString(),
+      rawDate: col.created_on,
+      time: new Date(col.created_on).toLocaleTimeString(),
+      userName: col.user_name || "N/A",
+      accountType: col.type === "loan" ? "Loan" : "Saving",
+      amount: col.type === "loan" ? col.amount : col.net_amount,
+      penalty: col.penalty || 0,
+      totalAmount:
+        col.type === "loan"
+          ? col.amount + (col.penalty || 0)
+          : col.net_amount,
+    }))
+  );
+
+
+    /* 📊 STATS (sirf login officer ka) */
+    const totalCollections = flatData.length;
+    const totalAmount = flatData.reduce((s, i) => s + i.totalAmount, 0);
+
+    setStats({
+      totalCollections,
+      totalAmount,
+      loanCollections: flatData.filter((i) => i.accountType === "Loan").length,
+      savingCollections: flatData.filter((i) => i.accountType === "Saving").length,
+    });
+
+    setReportData((prev) => ({
+      ...prev,
+      [reportType]: flatData,
+    }));
+  } catch (err) {
+    console.error(err);
+    setReportData((prev) => ({
+      ...prev,
+      [reportType]: [],
+    }));
+  } finally {
+    setReportLoading(false);
+  }
+};
 
   const handleReportTypeChange = (reportType) => {
     setSelectedReportType(reportType);
@@ -336,9 +322,9 @@ const Reports = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -348,26 +334,29 @@ const Reports = () => {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: "easeOut"
-      }
-    }
+        ease: "easeOut",
+      },
+    },
   };
 
   const getReportTitle = () => {
     const now = new Date();
     switch (selectedReportType) {
-      case 'daily':
+      case "daily":
         return `Daily Report - ${now.toLocaleDateString()}`;
-      case 'weekly':
+      case "weekly":
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay());
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         return `Weekly Report - ${startOfWeek.toLocaleDateString()} to ${endOfWeek.toLocaleDateString()}`;
-      case 'monthly':
-        return `Monthly Report - ${now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+      case "monthly":
+        return `Monthly Report - ${now.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        })}`;
       default:
-        return 'Report';
+        return "Report";
     }
   };
 
@@ -387,33 +376,31 @@ const Reports = () => {
                 <FiBarChart2 className="mr-3 text-blue-600" />
                 Collection Reports
               </h1>
-              <p className="text-gray-600 mt-2">
-                Track your collection performance and analyze data
-              </p>
+          
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
-                onClick={() => handleReportTypeChange('daily')}
-                colorScheme={selectedReportType === 'daily' ? 'blue' : 'gray'}
-                variant={selectedReportType === 'daily' ? 'solid' : 'outline'}
+                onClick={() => handleReportTypeChange("daily")}
+                colorScheme={selectedReportType === "daily" ? "blue" : "gray"}
+                variant={selectedReportType === "daily" ? "solid" : "outline"}
                 leftIcon={<FiCalendar />}
                 p={2}
               >
                 Daily
               </Button>
               <Button
-                onClick={() => handleReportTypeChange('weekly')}
-                colorScheme={selectedReportType === 'weekly' ? 'blue' : 'gray'}
-                variant={selectedReportType === 'weekly' ? 'solid' : 'outline'}
+                onClick={() => handleReportTypeChange("weekly")}
+                colorScheme={selectedReportType === "weekly" ? "blue" : "gray"}
+                variant={selectedReportType === "weekly" ? "solid" : "outline"}
                 leftIcon={<FiCalendar />}
                 p={2}
               >
                 Weekly
               </Button>
               <Button
-                onClick={() => handleReportTypeChange('monthly')}
-                colorScheme={selectedReportType === 'monthly' ? 'blue' : 'gray'}
-                variant={selectedReportType === 'monthly' ? 'solid' : 'outline'}
+                onClick={() => handleReportTypeChange("monthly")}
+                colorScheme={selectedReportType === "monthly" ? "blue" : "gray"}
+                variant={selectedReportType === "monthly" ? "solid" : "outline"}
                 leftIcon={<FiCalendar />}
                 p={2}
               >
@@ -432,9 +419,22 @@ const Reports = () => {
 
         {/* Stats Cards */}
         <motion.div variants={itemVariants} className="mb-8">
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+          <Grid
+            templateColumns={{
+              base: "1fr",
+              sm: "repeat(2, 1fr)",
+              lg: "repeat(4, 1fr)",
+            }}
+            gap={{ base: 3, md: 6 }}
+          >
             <GridItem>
-              <Box bg={bgColor} p={2} borderRadius="lg" border="1px" borderColor={borderColor} shadow="sm">
+              <Box
+                bg={bgColor}
+                p={{ base: 3, md: 4 }}
+                borderRadius="lg"
+                border="1px"
+                borderColor={borderColor}
+              >
                 <Stat>
                   <StatLabel color="gray.600" fontSize="sm" fontWeight="medium">
                     Total Collections
@@ -449,14 +449,25 @@ const Reports = () => {
                 </Stat>
               </Box>
             </GridItem>
-            
+
             <GridItem>
-              <Box bg={bgColor} p={2} borderRadius="lg" border="1px" borderColor={borderColor} shadow="sm">
+              <Box
+                bg={bgColor}
+                p={2}
+                borderRadius="lg"
+                border="1px"
+                borderColor={borderColor}
+                shadow="sm"
+              >
                 <Stat>
                   <StatLabel color="gray.600" fontSize="sm" fontWeight="medium">
                     Total Amount
                   </StatLabel>
-                  <StatNumber color="green.600" fontSize="2xl" fontWeight="bold">
+                  <StatNumber
+                    color="green.600"
+                    fontSize="2xl"
+                    fontWeight="bold"
+                  >
                     ₹{stats.totalAmount.toLocaleString()}
                   </StatNumber>
                   <StatHelpText>
@@ -466,14 +477,25 @@ const Reports = () => {
                 </Stat>
               </Box>
             </GridItem>
-            
+
             <GridItem>
-              <Box bg={bgColor} p={2} borderRadius="lg" border="1px" borderColor={borderColor} shadow="sm">
+              <Box
+                bg={bgColor}
+                p={2}
+                borderRadius="lg"
+                border="1px"
+                borderColor={borderColor}
+                shadow="sm"
+              >
                 <Stat>
                   <StatLabel color="gray.600" fontSize="sm" fontWeight="medium">
                     Loan Collections
                   </StatLabel>
-                  <StatNumber color="purple.600" fontSize="2xl" fontWeight="bold">
+                  <StatNumber
+                    color="purple.600"
+                    fontSize="2xl"
+                    fontWeight="bold"
+                  >
                     {stats.loanCollections}
                   </StatNumber>
                   <StatHelpText>
@@ -483,9 +505,16 @@ const Reports = () => {
                 </Stat>
               </Box>
             </GridItem>
-            
+
             <GridItem>
-              <Box bg={bgColor} p={2} borderRadius="lg" border="1px" borderColor={borderColor} shadow="sm">
+              <Box
+                bg={bgColor}
+                p={2}
+                borderRadius="lg"
+                border="1px"
+                borderColor={borderColor}
+                shadow="sm"
+              >
                 <Stat>
                   <StatLabel color="gray.600" fontSize="sm" fontWeight="medium">
                     Saving Collections
@@ -505,7 +534,14 @@ const Reports = () => {
 
         {/* Report Table */}
         <motion.div variants={itemVariants}>
-          <Box bg={bgColor} borderRadius="lg" border="1px" borderColor={borderColor} shadow="sm" overflow="hidden">
+          <Box
+            bg={bgColor}
+            borderRadius="lg"
+            border="1px"
+            borderColor={borderColor}
+            shadow="sm"
+            overflow="hidden"
+          >
             <Box p={6} borderBottom="1px" borderColor={borderColor}>
               <HStack justify="space-between">
                 <Text fontSize="lg" fontWeight="semibold" color="gray.700">
@@ -514,12 +550,14 @@ const Reports = () => {
                 {reportLoading && (
                   <HStack>
                     <Spinner size="sm" color="blue.500" />
-                    <Text fontSize="sm" color="gray.500">Loading...</Text>
+                    <Text fontSize="sm" color="gray.500">
+                      Loading...
+                    </Text>
                   </HStack>
                 )}
               </HStack>
             </Box>
-            
+
             {reportLoading ? (
               <Center py={12}>
                 <VStack>
@@ -528,13 +566,13 @@ const Reports = () => {
                 </VStack>
               </Center>
             ) : (
-              <Box overflowX="auto">
-                {selectedReportType === 'weekly' ? (
+              <Box overflowX="auto" maxW="100vw">
+                {selectedReportType === "weekly" ? (
                   // Weekly report with day-wise grouping
                   <WeeklyReportTable data={reportData[selectedReportType]} />
                 ) : (
                   // Daily and Monthly reports with regular table
-                  <Table variant="simple">
+                  <Table variant="simple" size={{ base: "sm", md: "md" }}>
                     <Thead bg="gray.50">
                       <Tr>
                         <Th>Date</Th>
@@ -553,10 +591,12 @@ const Reports = () => {
                             <VStack>
                               <FiBarChart2 size={48} color="#9CA3AF" />
                               <Text color="gray.500" fontSize="lg">
-                                No collections found for {selectedReportType} report
+                                No collections found for {selectedReportType}{" "}
+                                report
                               </Text>
                               <Text color="gray.400" fontSize="sm">
-                                Collections will appear here once you start collecting payments
+                                Collections will appear here once you start
+                                collecting payments
                               </Text>
                             </VStack>
                           </Td>
@@ -579,12 +619,18 @@ const Reports = () => {
                             <Td>
                               <HStack>
                                 <FiUsers color="#6B7280" />
-                                <Text fontWeight="medium">{collection.userName}</Text>
+                                <Text fontWeight="medium">
+                                  {collection.userName}
+                                </Text>
                               </HStack>
                             </Td>
                             <Td>
                               <Badge
-                                colorScheme={collection.accountType === 'Loan' ? 'blue' : 'green'}
+                                colorScheme={
+                                  collection.accountType === "Loan"
+                                    ? "blue"
+                                    : "green"
+                                }
                                 variant="subtle"
                                 px={3}
                                 py={1}
@@ -596,7 +642,12 @@ const Reports = () => {
                             <Td isNumeric fontWeight="medium">
                               ₹{collection.amount.toLocaleString()}
                             </Td>
-                            <Td isNumeric color={collection.penalty > 0 ? "red.500" : "gray.500"}>
+                            <Td
+                              isNumeric
+                              color={
+                                collection.penalty > 0 ? "red.500" : "gray.500"
+                              }
+                            >
                               ₹{collection.penalty.toLocaleString()}
                             </Td>
                             <Td isNumeric fontWeight="bold" color="green.600">
@@ -610,15 +661,24 @@ const Reports = () => {
                 )}
               </Box>
             )}
-            
+
             {reportData[selectedReportType].length > 0 && (
               <Box p={6} bg="gray.50" borderTop="1px" borderColor={borderColor}>
                 <HStack justify="space-between">
                   <Text fontSize="sm" color="gray.600">
-                    Total Collections: <Text as="span" fontWeight="bold">{reportData[selectedReportType].length}</Text>
+                    Total Collections:{" "}
+                    <Text as="span" fontWeight="bold">
+                      {reportData[selectedReportType].length}
+                    </Text>
                   </Text>
                   <Text fontSize="sm" fontWeight="bold" color="green.600">
-                    Total Amount: ₹{reportData[selectedReportType].reduce((sum, collection) => sum + collection.totalAmount, 0).toLocaleString()}
+                    Total Amount: ₹
+                    {reportData[selectedReportType]
+                      .reduce(
+                        (sum, collection) => sum + collection.totalAmount,
+                        0
+                      )
+                      .toLocaleString()}
                   </Text>
                 </HStack>
               </Box>
