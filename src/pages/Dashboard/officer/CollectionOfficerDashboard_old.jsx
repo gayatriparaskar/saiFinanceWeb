@@ -472,12 +472,12 @@ useEffect(() => {
           officerModelAmount: officerTodayLoanAmount + officerTodaySavingAmount
         });
         
-        // setTodayStats({
-        //   todayAmount: totalTodayAmount > 0 ? totalTodayAmount : (officerTodayLoanAmount + officerTodaySavingAmount),
-        //   todayLoans: finalLoanAmount, // Amount, not count
-        //   todaySavings: finalSavingAmount, // Amount, not count
-        //   todayCount: finalLoanCount + finalSavingCount // Total count (for reference)
-        // });
+        setTodayStats({
+          todayAmount: totalTodayAmount > 0 ? totalTodayAmount : (officerTodayLoanAmount + officerTodaySavingAmount),
+          todayLoans: finalLoanAmount, // Amount, not count
+          todaySavings: finalSavingAmount, // Amount, not count
+          todayCount: finalLoanCount + finalSavingCount // Total count (for reference)
+        });
       }
       
       // Set daily collections from user_collections array1

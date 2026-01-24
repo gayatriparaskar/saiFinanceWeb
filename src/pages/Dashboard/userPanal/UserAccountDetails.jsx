@@ -51,6 +51,7 @@ import {
   VStack,
   HStack,
   useToast,
+  Badge,
 } from "@chakra-ui/react";
 
 import { MdEdit, MdDelete } from "react-icons/md";
@@ -64,18 +65,10 @@ function UserAccountDetails() {
   const [Dailydata, setDailyData] = useState([]);
   const [userdata, setUserData] = useState({});
   const [newID, setNewID] = useState(null);
-  console.log(data);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isOpen2,
-    onOpen: onOpen2,
-    onClose: onClose2,
-  } = useDisclosure();
-  const {
-    isOpen: isDateModalOpen,
-    onOpen: onDateModalOpen,
-    onClose: onDateModalClose,
-  } = useDisclosure();
+  // Add this state near other state declarations
+const [savingData, setSavingData] = useState([]);
+const [savingAccount, setSavingAccount] = useState({});
+
   const cancelRef = React.useRef();
   const btnRef = React.useRef();
   const toast = useToast();
@@ -83,7 +76,7 @@ function UserAccountDetails() {
   // Date range states
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-
+ 
   const storedUser = localStorage.getItem('user');
   let id = null;
   
@@ -140,7 +133,232 @@ function UserAccountDetails() {
     fetchData();
   }, []);
   console.log(Dailydata);
+  // Update your table data source to use savingData
 
+
+// Make sure your savingColumns match the data structure
+const savingColumns = React.useMemo(
+  () => [
+    {
+      Header: 'Sr No.',
+      accessor: (row, i) => i + 1,
+    },
+    {
+      Header: 'Date',
+      accessor: 'created_on',
+      Cell: ({ value }) => value ? dayjs(value).format("D MMM, YYYY h:mm A") : '-'
+    },
+    
+    {
+      Header: 'Amount',
+      accessor: 'deposit_amount',
+      Cell: ({ row }) => {
+        const amount = row.original.transaction_type === 'deposit' 
+          ? row.original.deposit_amount 
+          : row.original.withdraw_amount;
+        return `Rs. ${amount || 0}`;
+      }
+    },
+    {
+      Header: 'Collected By',
+      accessor: 'collected_officer_name',
+      Cell: ({ value }) => value || '-'
+    }
+  ],
+  []
+);
+{/* <Table
+  data={savingData || []}  // Make sure to use savingData here
+  columns={savingColumns}  // Make sure savingColumns is properly defined
+  emptyMessage="No saving transactions found"
+/> */}
+// Add this useEffect to fetch saving account data
+// Add this useEffect hook with your other hooks
+useEffect(() => {
+  async function fetchSavingTransactions() {
+    try {
+      const response = await axios.get(`savingDailyCollections/${id}`);
+      console.log('Saving transactions response:', response.data.result); // Debug log
+      if (response?.data?.result) {
+        setDailyData(response.data.result.collections);
+        // setSavingData(response.data.result.collections);
+      }
+    } catch (error) {
+      console.error('Error fetching saving transactions:', error);
+    }
+  }
+
+  if (id) {
+    fetchSavingTransactions();
+  }
+}, [id]);
+
+// useEffect(() => {
+//   async function fetchSavingTransactions() {
+//     try {
+//       const response = await axios.get(`savingDailyCollections/${id}`);
+//       if (response?.data?.result) {
+//         setSavingData(response.data.result.reverse());
+//       }
+//     } catch (error) {
+//       console.error('Error fetching saving transactions:', error);
+//     }
+//   }
+//   fetchSavingTransactions();
+// }, [id]);
+
+// Update the generatePDF function
+const generatePDF = (customStartDate = null, customEndDate = null) => {
+  const doc = new jsPDF();
+  const userName = userdata?.full_name || "-";
+  const isHindi = t('localization_testing') === 'hindi';
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // Add Loan Details Section
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  const loanTitle = isHindi ? "SAI FINANCE LOAN STATEMENT" : "SAI FINANCE LOAN STATEMENT";
+  const loanTitleWidth = doc.getTextWidth(loanTitle);
+  doc.text(loanTitle, (pageWidth - loanTitleWidth) / 2, 20);
+
+  if (userdata?.active_loan_id) {
+    const startDate = dayjs(userdata.active_loan_id.created_on).format("D MMM, YYYY");
+    const endDate = userdata.active_loan_id.end_date 
+      ? dayjs(userdata.active_loan_id.end_date).format("D MMM, YYYY")
+      : dayjs(userdata.active_loan_id.created_on).add(120, 'day').format("D MMM, YYYY");
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    let y = 30;
+    doc.text(`Name: ${userName}`, 14, y);
+    doc.text(`End Date: ${endDate}`, pageWidth / 2 + 10, y);
+    y += 7;
+    doc.text(`Start Date: ${startDate}`, 14, y);
+    doc.text(`Total Due: Rs. ${userdata.active_loan_id.total_due_amount || 0}`, pageWidth / 2 + 10, y);
+    y += 7;
+    doc.text(`Total Loan: Rs. ${userdata.active_loan_id.loan_amount || 0}`, 14, y);
+    doc.text(`Total Paid: Rs. ${userdata.active_loan_id.total_amount || 0}`, pageWidth / 2 + 10, y);
+    y += 7;
+    doc.text(`Total Penalty: Rs. ${userdata.active_loan_id.total_penalty_amount || 0}`, 14, y);
+    y += 10;
+
+    // Add Loan Transactions
+    let filteredLoanData = Dailydata;
+    if (customStartDate && customEndDate) {
+      filteredLoanData = Dailydata.filter(item => {
+        const itemDate = dayjs(item.created_on);
+        return itemDate.isAfter(dayjs(customStartDate).subtract(1, 'day')) && 
+               itemDate.isBefore(dayjs(customEndDate).add(1, 'day'));
+      });
+    }
+
+    const groupedByMonth = groupBy(filteredLoanData, item => dayjs(item.created_on).format("MMMM YYYY"));
+    let startY = y + 20;
+
+    Object.entries(groupedByMonth).forEach(([monthYear, records]) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text(`Loan Transactions - ${monthYear}`, 14, startY);
+      startY += 6;
+
+      const rows = records.map(item => [
+        dayjs(item.created_on).format("D MMM, YYYY h:mm A"),
+        "EMI Payment",
+        `Rs. ${item.amount || 0}`,
+        `Rs. ${item.total_penalty_amount || 0}`,
+        item.collected_officer_name || "-"
+      ]);
+
+      autoTable(doc, {
+        startY,
+        head: [["Date", "Description", "Amount (Rs.)", "Penalty (Rs.)", "Collected By"]],
+        body: rows,
+        headStyles: { fillColor: [211, 211, 211], fontStyle: 'bold' },
+        styles: { fontSize: 10, cellPadding: 3 },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        margin: { left: 14, right: 14 },
+        theme: 'striped'
+      });
+
+      startY = doc.lastAutoTable.finalY + 10;
+    });
+  }
+
+  // Add Saving Account Section
+  doc.addPage();
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  const savingTitle = isHindi ? "SAVING ACCOUNT STATEMENT" : "SAVING ACCOUNT STATEMENT";
+  const savingTitleWidth = doc.getTextWidth(savingTitle);
+  doc.text(savingTitle, (pageWidth - savingTitleWidth) / 2, 20);
+
+  if (savingAccount) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    let y = 30;
+    doc.text(`Account Holder: ${userName}`, 14, y);
+    doc.text(`Account Number: ${savingAccount.account_number || '-'}`, 14, y + 7);
+    doc.text(`Total Balance: Rs. ${savingAccount.current_balance || 0}`, 14, y + 14);
+    doc.text(`Total Deposits: Rs. ${savingAccount.total_deposits || 0}`, 14, y + 21);
+    doc.text(`Total Withdrawals: Rs. ${savingAccount.total_withdrawals || 0}`, 14, y + 28);
+    y += 35;
+
+    // Add Saving Transactions
+    let filteredSavingData = savingData;
+    if (customStartDate && customEndDate) {
+      filteredSavingData = savingData.filter(item => {
+        const itemDate = dayjs(item.created_on);
+        return itemDate.isAfter(dayjs(customStartDate).subtract(1, 'day')) && 
+               itemDate.isBefore(dayjs(customEndDate).add(1, 'day'));
+      });
+    }
+
+    const groupedByMonthSaving = groupBy(filteredSavingData, item => dayjs(item.created_on).format("MMMM YYYY"));
+    let startYSaving = y + 10;
+
+    Object.entries(groupedByMonthSaving).forEach(([monthYear, records]) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text(`Saving Transactions - ${monthYear}`, 14, startYSaving);
+      startYSaving += 6;
+
+      const rows = records.map(item => [
+        dayjs(item.created_on).format("D MMM, YYYY h:mm A"),
+        item.transaction_type === 'deposit' ? 'Deposit' : 'Withdrawal',
+        `Rs. ${item.transaction_type === 'deposit' ? item.deposit_amount : item.withdraw_amount || 0}`,
+        item.collected_officer_name || "-"
+      ]);
+
+      autoTable(doc, {
+        startY: startYSaving,
+        head: [["Date", "Transaction Type", "Amount (Rs.)", "Processed By"]],
+        body: rows,
+        headStyles: { fillColor: [211, 211, 211], fontStyle: 'bold' },
+        styles: { fontSize: 10, cellPadding: 3 },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        margin: { left: 14, right: 14 },
+        theme: 'striped'
+      });
+
+      startYSaving = doc.lastAutoTable.finalY + 10;
+    });
+  }
+
+  // Save the PDF
+  doc.save(`${userName}_account_statement_${new Date().toISOString().split('T')[0]}.pdf`);
+};
+  console.log(data);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpen2,
+    onOpen: onOpen2,
+    onClose: onClose2,
+  } = useDisclosure();
+  const {
+    isOpen: isDateModalOpen,
+    onOpen: onDateModalOpen,
+    onClose: onDateModalClose,
+  } = useDisclosure();
   const columns = React.useMemo(
     () => [
       {
@@ -158,16 +376,16 @@ function UserAccountDetails() {
       },
 
       {
-        Header: t('EMI Amount/Day', 'EMI Amount/Day'),
-        accessor: "amount",
-        Cell: ({ value, row: { original } }) => <Cell text={`Rs. ${value}`} />,
-      },
-      {
-        Header: t('Penalty Amount', 'Penalty Amount'),
-        accessor: "total_penalty_amount",
-        Cell: ({ value, row: { original } }) => <Cell text={`Rs. ${value}`} />,
-      },
+  Header: t('EMI Amount/Day', 'EMI Amount/Day'),
+  accessor: (row) => row.amount || row.deposit_amount,
+  Cell: ({ value }) => <Cell text={`Rs. ${value}`} />,
+},
 
+      {
+  Header: t('Penalty/Withdraw Amount', 'Penalty/Withdraw Amount'),
+  accessor: (row) => row.total_penalty_amount ?? row.withdraw_amount,
+  Cell: ({ value }) => <Cell text={`Rs. ${value}`} />,
+},
       {
         Header: t('Collected By', 'Collected By'),
         accessor: "collected_officer_name",
@@ -177,58 +395,12 @@ function UserAccountDetails() {
           </>
         ),
       },
-
-      // {
-      //   Header: t('Action', 'Action'),
-      //   accessor: "",
-      //   Cell: ({ value, row: { original } }) => {
-      //     return (
-      //       <>
-      //         <Menu>
-      //           <MenuButton
-      //             as={Button}
-      //             className="bg-purple "
-      //             colorScheme="bgBlue"
-      //             onClick={() => setNewID(original._id)}
-      //           >
-      //             {t('Actions', 'Actions')}
-      //           </MenuButton>
-      //           <MenuList>
-      //             <Link to={`/dash/edit-course/${original._id}`}>
-      //               <MenuItem>
-      //                 {" "}
-      //                 <HiStatusOnline className="mr-4" /> {t('View User', 'View User')}
-      //               </MenuItem>
-      //             </Link>
-
-      //             <Link to={`/dash/edit-course/${original._id}`}>
-      //               <MenuItem>
-      //                 {" "}
-      //                 <MdEdit className="mr-4" /> {t('Edit', 'Edit')}
-      //               </MenuItem>
-      //             </Link>
-
-      //             <MenuItem onClick={onOpen}>
-      //               {" "}
-      //               <MdDelete className="mr-4" />
-      //               {t('Delete', 'Delete')}
-      //             </MenuItem>
-      //             <MenuItem onClick={onOpen2}>
-      //               {" "}
-      //               <HiStatusOnline className="mr-4" /> {t('Status', 'Status')}
-      //             </MenuItem>
-      //           </MenuList>
-      //         </Menu>
-      //       </>
-      //     );
-      //   },
-      // },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [Dailydata]
   );
 
-  const generatePDF = (customStartDate = null, customEndDate = null) => {
+  const generatePDFLoan = (customStartDate = null, customEndDate = null) => {
     const doc = new jsPDF();
     const userName = userdata?.full_name || "-";
     const startDate = dayjs(userdata?.active_loan_id?.created_on).format("D MMM, YYYY");
@@ -370,7 +542,7 @@ function UserAccountDetails() {
       return;
     }
 
-    generatePDF(startDate, endDate);
+    generatePDFLoan(startDate, endDate);
     onDateModalClose();
     setStartDate("");
     setEndDate("");
@@ -378,13 +550,17 @@ function UserAccountDetails() {
 
   // Handle full PDF generation (all data)
   const handleFullPDF = () => {
-    generatePDF();
+    generatePDFLoan();
   };
 
   return (
     <div className="lg:py-16 lg:pt-24 py-8 pt-24 px-6 bg-primaryBg">
       <section className=" md:p-1 ">
         <div className="">
+          <div>
+      
+  {/* // Add this in your JSX where you want to show the saving transactions */}
+          </div>
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
             {/* User Information Section */}
             <div className="flex flex-col gap-4 text-start w-full lg:w-auto">
@@ -516,8 +692,8 @@ function UserAccountDetails() {
           <div className="mt-2">
             <Table
               // isLoading={isLoading}
-              data={Dailydata || []}
-              columns={columns}
+              data={Dailydata || savingAccount}
+              columns={columns || savingColumns}
               // total={data?.total}
             />
           </div>
@@ -562,6 +738,7 @@ function UserAccountDetails() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+  
     </div>
   );
 }
