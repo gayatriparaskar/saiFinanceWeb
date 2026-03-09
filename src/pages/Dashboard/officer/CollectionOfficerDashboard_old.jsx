@@ -1157,9 +1157,7 @@ console.log(user._id,"userrr");
                       <Th>Account Type</Th>
                       {/* <Th>Status</Th> */}
                       <Th>Principal Amount</Th>
-                      <Th>Total with Interest</Th>
                       <Th>Current Amount</Th>
-                      <Th>Remaining Amount</Th>
                       <Th>Daily EMI Amount</Th>
                       <Th>Remaining EMI Days</Th>
                       <Th>Start Date</Th>
@@ -1227,31 +1225,11 @@ console.log(user._id,"userrr");
                         </Td>
                         <Td>
                           <VStack align="start" spacing={1}>
-                            <Text fontWeight="semibold" color="green.600" fontSize="sm">
-                              {formatCurrency(assignedUser?.total_due_amount || 0)}
-                            </Text>
-                            <Text fontSize="xs" color="gray.500">
-                              (with interest)
-                            </Text>
-                          </VStack>
-                        </Td>
-                        <Td>
-                          <VStack align="start" spacing={1}>
                             <Text fontWeight="semibold" color="purple.600" fontSize="sm">
                               {formatCurrency(assignedUser?.current_amount || assignedUser?.collected_amount)}
                             </Text>
                             <Text fontSize="xs" color="gray.500">
                               (paid/saved)
-                            </Text>
-                          </VStack>
-                        </Td>
-                        <Td>
-                          <VStack align="start" spacing={1}>
-                            <Text fontWeight="semibold" color="red.600" fontSize="sm">
-                              {formatCurrency(assignedUser?.total_due_amount - (assignedUser.current_amount || assignedUser.collected_amount) || 0)}
-                            </Text>
-                            <Text fontSize="xs" color="gray.500">
-                              (remaining)
                             </Text>
                           </VStack>
                         </Td>

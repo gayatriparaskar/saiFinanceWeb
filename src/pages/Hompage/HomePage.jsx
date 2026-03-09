@@ -219,6 +219,23 @@ const HomePage = () => {
     }
   }, [profile?._id]);
 
+  // Function to calculate remaining days from created_on date
+  const calculateRemainingDays = useCallback((created_on, totalDays = 120) => {
+    if (!created_on) return 0;
+    
+    const createdDate = new Date(created_on);
+    const currentDate = new Date();
+    
+    // Calculate the difference in days
+    const timeDiff = currentDate - createdDate;
+    const daysPassed = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    
+    // Calculate remaining days
+    const remainingDays = Math.max(0, totalDays - daysPassed);
+    
+    return remainingDays;
+  }, []);
+
   // Function to fetch and update profile data
   const fetchProfile = useCallback(async (showLoading = false) => {
     try {
@@ -663,11 +680,11 @@ const HomePage = () => {
   }
 
   // Calculate loan progress
-  const loanAmount = parseFloat(profile?.active_loan_id?.loan_amount) || 0;
-  const totalPaid = parseFloat(profile?.active_loan_id?.total_amount) || 0;
-  const totalDue = parseFloat(profile?.active_loan_id?.total_due_amount) || 0;
+  const loanAmount = parseFloat(profile?.active_loan_id?.loan_amount) || (profile?.saving_account_id?.current_amount) || 0;
+  const totalPaid = parseFloat(profile?.active_loan_id?.total_amount) || (profile?.saving_account_id?.total_amount) || 0;
+  const totalDue = parseFloat(profile?.active_loan_id?.total_due_amount) || profile?.saving_account_id?.current_amount ||0;
   const loanProgress =
-    loanAmount > 0 ? Math.min((totalPaid / loanAmount) * 100, 100) : 0;
+    loanAmount > 0 ? Math.min((totalPaid / loanAmount ) * 100, 100) : 0;
 
   // Account balance for saving account
   // const accountBalance =
@@ -993,7 +1010,7 @@ const HomePage = () => {
                           fontWeight="bold"
                           color="#1e40af"
                         >
-                          ₹{totalPaid - totalDue}
+                          ₹{Math.abs(totalPaid - totalDue)}
                         </Text>
                       </CardBody>
                     </Card>
@@ -1160,7 +1177,7 @@ const HomePage = () => {
                         },
                         {
                           key: "remaining_emi_days",
-                          value: `${profile?.saving_account_id?.remaining_emi_days || 0} days`,
+                          value: `${calculateRemainingDays(profile?.saving_account_id?.created_on, 120)} days`,
                           icon: "📅",
                         },
                       ]
@@ -1175,7 +1192,7 @@ const HomePage = () => {
                         },
                         {
                           key: "remaining_emi_days",
-                          value: `${profile?.active_loan_id?.remaining_emi_days || 0} days`,
+                          value: `${calculateRemainingDays(profile?.active_loan_id?.created_on, 120)} days`,
                           icon: "📅",
                         },
                       ]),
@@ -1266,7 +1283,7 @@ const HomePage = () => {
                       fontWeight="medium"
                       opacity="0.9"
                     >
-                      {getText("remaining_balance")}
+                    Balance
                     </Text>
                     <Text color="white" fontSize="xl" fontWeight="bold">
                       ₹{totalDue.toLocaleString()}
@@ -1286,8 +1303,8 @@ const HomePage = () => {
                     </Text>
                     <Text color="white" fontSize="2xl" fontWeight="bold">
                       {isSavingAccount 
-                        ? (profile?.saving_account_id?.remaining_emi_days || 0)
-                        : (profile?.active_loan_id?.remaining_emi_days || 0)
+                        ? calculateRemainingDays(profile?.saving_account_id?.created_on, 120)
+                        : calculateRemainingDays(profile?.active_loan_id?.created_on, 120)
                       }
                     </Text>
                     <Text color="white" fontSize="xs" opacity="0.8">

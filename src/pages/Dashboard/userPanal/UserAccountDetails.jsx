@@ -377,7 +377,12 @@ const generatePDF = (customStartDate = null, customEndDate = null) => {
 
       {
   Header: t('EMI Amount/Day', 'EMI Amount/Day'),
-  accessor: (row) => row.amount || row.deposit_amount,
+  accessor: (row) => row.loan_detail_id?.emi_day || row.deposit_amount || 0,
+  Cell: ({ value }) => <Cell text={`Rs. ${value}`} />,
+},
+      {
+  Header: t('Current Amount'),
+  accessor: (row) => row.amount || row.deposit_amount || 0,
   Cell: ({ value }) => <Cell text={`Rs. ${value}`} />,
 },
 
@@ -649,7 +654,7 @@ const generatePDF = (customStartDate = null, customEndDate = null) => {
                   </MenuList>
                 </Menu>
 
-                <Link to={`/dash/add-daily-collection/${userdata?._id}`} className="w-full sm:w-auto">
+                {/* <Link to={`/dash/add-daily-collection/${userdata?._id}`} className="w-full sm:w-auto">
                   <Button
                     colorScheme="purple"
                     size="md"
@@ -659,7 +664,7 @@ const generatePDF = (customStartDate = null, customEndDate = null) => {
                   >
                     {t('Add Amount', 'Add Amount')}
                   </Button>
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>
