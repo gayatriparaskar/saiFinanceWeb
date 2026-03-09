@@ -140,7 +140,7 @@ useEffect(() => {
     period: "daily",
   });
 
-},[]);
+},[user._id]);
 
 
   const fetchOfficerData = async () => {

@@ -29,13 +29,9 @@ import {
   AlertTitle,
   AlertDescription,
   useToast,
-  Select,
   Input,
   InputGroup,
   InputLeftElement,
-  IconButton,
-  Tooltip,
-  Divider,
   SimpleGrid,
   useColorModeValue
 } from '@chakra-ui/react';
@@ -45,7 +41,6 @@ import axios from '../../../axios';
 import dayjs from 'dayjs';
 
 const MotionBox = motion(Box);
-const MotionCard = motion(Card);
 
 const DailyReport = () => {
   const [reports, setReports] = useState([]);

@@ -70,13 +70,13 @@ const DailyReport = () => {
 
   }, [selectedDate]);
   const [filteredData, setFilteredData] = useState([]);
-  const [officers, setOfficers] = useState([]);
+  const [setOfficers] = useState([]);
   const [selectedUser, setSelectedUser] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentType, setPaymentType] = useState('loan');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [assignRole, setAssignRole] = useState('');
+  const [setAssignRole] = useState('');
   const [paymentProcessType, setPaymentProcessType] = useState('');
   const toast = useToast();
 
@@ -85,7 +85,7 @@ const DailyReport = () => {
       fetchDailyReport();
       fetchOfficers();
     }
-  }, [user, selectedDate]);
+  },[user, selectedDate ,fetchDailyReport]);
 
   const fetchOfficers = async () => {
     try {

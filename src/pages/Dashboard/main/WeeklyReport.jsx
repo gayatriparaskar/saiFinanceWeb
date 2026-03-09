@@ -58,11 +58,11 @@ const WeeklyReport = () => {
 
   useEffect(() => {
     fetchWeeklyReports();
-  }, [selectedWeek, isMonthlyView]);
+  });
 
   useEffect(() => {
     filterReports();
-  }, [reports, searchTerm]);
+  });
 
   // Show payment process info toast when component mounts
   useEffect(() => {

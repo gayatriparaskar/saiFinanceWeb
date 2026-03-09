@@ -233,7 +233,7 @@ const Reports = () => {
 
   useEffect(() => {
     fetchReportData(selectedReportType);
-  }, []);
+  });
 
 
 const fetchReportData = async (reportType) => {

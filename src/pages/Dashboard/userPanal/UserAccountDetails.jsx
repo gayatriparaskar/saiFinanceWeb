@@ -54,8 +54,7 @@ function UserAccountDetails() {
   const [Dailydata, setDailyData] = useState([]);
   const [userdata, setUserData] = useState({});
   // Add this state near other state declarations
-const [savingData, setSavingData] = useState([]);
-const [savingAccount, setSavingAccount] = useState({});
+const [savingAccount] = useState({});
 
   // const cancelRef = React.useRef();
   const btnRef = React.useRef();
@@ -89,7 +88,7 @@ const [savingAccount, setSavingAccount] = useState({});
       });
     }
     fetchData();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     async function fetchData() {
@@ -101,7 +100,7 @@ const [savingAccount, setSavingAccount] = useState({});
       });
     }
     fetchData();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     async function fetchData() {
@@ -119,7 +118,7 @@ const [savingAccount, setSavingAccount] = useState({});
       });
     }
     fetchData();
-  }, []);
+  }, [id]);
   console.log(Dailydata);
   // Update your table data source to use savingData
 
