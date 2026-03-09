@@ -200,7 +200,6 @@ useEffect(() => {
   // const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isOpen2,
-    onOpen: onOpen2,
     onClose: onClose2,
   } = useDisclosure();
   const {

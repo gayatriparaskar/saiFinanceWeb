@@ -329,7 +329,7 @@ const HomePage = () => {
     };
 
     initializeData();
-  }, [userAccountType]);
+  }, [userAccountType, fetchProfile]);
 
   const openAmountModal = () => {
     setIsAmountModalOpen(true);
