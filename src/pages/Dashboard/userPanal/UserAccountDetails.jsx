@@ -1,7 +1,7 @@
 import React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { Link, useParams } from "react-router-dom";
+// import { Link, useParams } from "react-router-dom";
 
 // new for pdf
 
@@ -22,15 +22,8 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  MenuItemOption,
-  MenuGroup,
-  MenuOptionGroup,
-  MenuDivider,
-  InputGroup,
-  InputLeftElement,
   Input,
   Button,
-  InputRightAddon,
   useDisclosure,
   Drawer,
   DrawerBody,
@@ -50,13 +43,9 @@ import {
   FormLabel,
   VStack,
   HStack,
-  useToast,
-  Badge,
+  useToast
 } from "@chakra-ui/react";
 
-import { MdEdit, MdDelete } from "react-icons/md";
-import { HiStatusOnline } from "react-icons/hi";
-import { GrOverview } from "react-icons/gr";
 function UserAccountDetails() {
   const { t } = useLocalTranslation();
   // const { id } = useParams();
@@ -64,12 +53,11 @@ function UserAccountDetails() {
   const [data, setData] = useState([]);
   const [Dailydata, setDailyData] = useState([]);
   const [userdata, setUserData] = useState({});
-  const [newID, setNewID] = useState(null);
   // Add this state near other state declarations
 const [savingData, setSavingData] = useState([]);
 const [savingAccount, setSavingAccount] = useState({});
 
-  const cancelRef = React.useRef();
+  // const cancelRef = React.useRef();
   const btnRef = React.useRef();
   const toast = useToast();
   
@@ -207,148 +195,9 @@ useEffect(() => {
 //   fetchSavingTransactions();
 // }, [id]);
 
-// Update the generatePDF function
-const generatePDF = (customStartDate = null, customEndDate = null) => {
-  const doc = new jsPDF();
-  const userName = userdata?.full_name || "-";
-  const isHindi = t('localization_testing') === 'hindi';
-  const pageWidth = doc.internal.pageSize.getWidth();
-  
-  // Add Loan Details Section
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  const loanTitle = isHindi ? "SAI FINANCE LOAN STATEMENT" : "SAI FINANCE LOAN STATEMENT";
-  const loanTitleWidth = doc.getTextWidth(loanTitle);
-  doc.text(loanTitle, (pageWidth - loanTitleWidth) / 2, 20);
 
-  if (userdata?.active_loan_id) {
-    const startDate = dayjs(userdata.active_loan_id.created_on).format("D MMM, YYYY");
-    const endDate = userdata.active_loan_id.end_date 
-      ? dayjs(userdata.active_loan_id.end_date).format("D MMM, YYYY")
-      : dayjs(userdata.active_loan_id.created_on).add(120, 'day').format("D MMM, YYYY");
-    
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    let y = 30;
-    doc.text(`Name: ${userName}`, 14, y);
-    doc.text(`End Date: ${endDate}`, pageWidth / 2 + 10, y);
-    y += 7;
-    doc.text(`Start Date: ${startDate}`, 14, y);
-    doc.text(`Total Due: Rs. ${userdata.active_loan_id.total_due_amount || 0}`, pageWidth / 2 + 10, y);
-    y += 7;
-    doc.text(`Total Loan: Rs. ${userdata.active_loan_id.loan_amount || 0}`, 14, y);
-    doc.text(`Total Paid: Rs. ${userdata.active_loan_id.total_amount || 0}`, pageWidth / 2 + 10, y);
-    y += 7;
-    doc.text(`Total Penalty: Rs. ${userdata.active_loan_id.total_penalty_amount || 0}`, 14, y);
-    y += 10;
-
-    // Add Loan Transactions
-    let filteredLoanData = Dailydata;
-    if (customStartDate && customEndDate) {
-      filteredLoanData = Dailydata.filter(item => {
-        const itemDate = dayjs(item.created_on);
-        return itemDate.isAfter(dayjs(customStartDate).subtract(1, 'day')) && 
-               itemDate.isBefore(dayjs(customEndDate).add(1, 'day'));
-      });
-    }
-
-    const groupedByMonth = groupBy(filteredLoanData, item => dayjs(item.created_on).format("MMMM YYYY"));
-    let startY = y + 20;
-
-    Object.entries(groupedByMonth).forEach(([monthYear, records]) => {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text(`Loan Transactions - ${monthYear}`, 14, startY);
-      startY += 6;
-
-      const rows = records.map(item => [
-        dayjs(item.created_on).format("D MMM, YYYY h:mm A"),
-        "EMI Payment",
-        `Rs. ${item.amount || 0}`,
-        `Rs. ${item.total_penalty_amount || 0}`,
-        item.collected_officer_name || "-"
-      ]);
-
-      autoTable(doc, {
-        startY,
-        head: [["Date", "Description", "Amount (Rs.)", "Penalty (Rs.)", "Collected By"]],
-        body: rows,
-        headStyles: { fillColor: [211, 211, 211], fontStyle: 'bold' },
-        styles: { fontSize: 10, cellPadding: 3 },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-        margin: { left: 14, right: 14 },
-        theme: 'striped'
-      });
-
-      startY = doc.lastAutoTable.finalY + 10;
-    });
-  }
-
-  // Add Saving Account Section
-  doc.addPage();
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  const savingTitle = isHindi ? "SAVING ACCOUNT STATEMENT" : "SAVING ACCOUNT STATEMENT";
-  const savingTitleWidth = doc.getTextWidth(savingTitle);
-  doc.text(savingTitle, (pageWidth - savingTitleWidth) / 2, 20);
-
-  if (savingAccount) {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    let y = 30;
-    doc.text(`Account Holder: ${userName}`, 14, y);
-    doc.text(`Account Number: ${savingAccount.account_number || '-'}`, 14, y + 7);
-    doc.text(`Total Balance: Rs. ${savingAccount.current_balance || 0}`, 14, y + 14);
-    doc.text(`Total Deposits: Rs. ${savingAccount.total_deposits || 0}`, 14, y + 21);
-    doc.text(`Total Withdrawals: Rs. ${savingAccount.total_withdrawals || 0}`, 14, y + 28);
-    y += 35;
-
-    // Add Saving Transactions
-    let filteredSavingData = savingData;
-    if (customStartDate && customEndDate) {
-      filteredSavingData = savingData.filter(item => {
-        const itemDate = dayjs(item.created_on);
-        return itemDate.isAfter(dayjs(customStartDate).subtract(1, 'day')) && 
-               itemDate.isBefore(dayjs(customEndDate).add(1, 'day'));
-      });
-    }
-
-    const groupedByMonthSaving = groupBy(filteredSavingData, item => dayjs(item.created_on).format("MMMM YYYY"));
-    let startYSaving = y + 10;
-
-    Object.entries(groupedByMonthSaving).forEach(([monthYear, records]) => {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text(`Saving Transactions - ${monthYear}`, 14, startYSaving);
-      startYSaving += 6;
-
-      const rows = records.map(item => [
-        dayjs(item.created_on).format("D MMM, YYYY h:mm A"),
-        item.transaction_type === 'deposit' ? 'Deposit' : 'Withdrawal',
-        `Rs. ${item.transaction_type === 'deposit' ? item.deposit_amount : item.withdraw_amount || 0}`,
-        item.collected_officer_name || "-"
-      ]);
-
-      autoTable(doc, {
-        startY: startYSaving,
-        head: [["Date", "Transaction Type", "Amount (Rs.)", "Processed By"]],
-        body: rows,
-        headStyles: { fillColor: [211, 211, 211], fontStyle: 'bold' },
-        styles: { fontSize: 10, cellPadding: 3 },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-        margin: { left: 14, right: 14 },
-        theme: 'striped'
-      });
-
-      startYSaving = doc.lastAutoTable.finalY + 10;
-    });
-  }
-
-  // Save the PDF
-  doc.save(`${userName}_account_statement_${new Date().toISOString().split('T')[0]}.pdf`);
-};
   console.log(data);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  // const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isOpen2,
     onOpen: onOpen2,

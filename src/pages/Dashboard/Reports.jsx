@@ -26,9 +26,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import {
-  FiTrendingUp,
   FiUsers,
-  FiDollarSign,
   FiCalendar,
   FiBarChart2,
   FiClock,
@@ -39,8 +37,6 @@ import axios from '../../axios'
 // Weekly Report Table Component with Day-wise Grouping
 const WeeklyReportTable = ({ data }) => {
   const [expandedDays, setExpandedDays] = useState({});
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
 
   // Group collections by day
   const groupedByDay = data.reduce((acc, collection) => {

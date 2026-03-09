@@ -32,7 +32,7 @@ import dayjs from 'dayjs';
 const ViewSavingUser = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const toast = useToast();
+  // const toast = useToast();
   
   const [userData, setUserData] = useState(null);
   const [dailyData, setDailyData] = useState([]);
@@ -59,10 +59,6 @@ const ViewSavingUser = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchDailyData = async () => {
-    // This is now handled in fetchUserData
   };
 
   const formatCurrency = (amount) => {
@@ -115,7 +111,7 @@ const ViewSavingUser = () => {
   const startDate = savingDetails?.created_on || savingDetails?.start_date;
   const currentAmount = savingDetails?.current_amount || 0;
   const amountToBe = savingDetails?.amount_to_be || 0;
-  const totalWithdrawal = savingDetails?.total_withdrawal || 0;
+  // const totalWithdrawal = savingDetails?.total_withdrawal || 0;
   const interestRate = savingDetails?.interest_rate || 0;
   const dailyEmiAmount = savingDetails?.emi_amount || 0;
   const remainingDays = savingDetails?.remaining_emi_days || 120;

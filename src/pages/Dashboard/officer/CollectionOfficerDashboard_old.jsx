@@ -46,7 +46,7 @@ const CollectionOfficerDashboard = () => {
     todaySavings: 0,
     todayCount: 0
   });
-  const [assignedUsers, setAssignedUsers] = useState([]);
+  const [setAssignedUsers] = useState([]);
   const [officerAssignUSers,setOfficerAssignUsers] = useState([]);
   const [form, setForm] = useState({
   assignTo: "officer",
@@ -268,10 +268,10 @@ useEffect(() => {
           totalTodayCount: todayLoanCollections.length + todaySavingCollections.length
         });
           // ✅ TODAY
-    const todayData = await fetchOfficerWiseCollections({
-      officerId: user._id,
-      period: "daily",
-    });
+    // const todayData = await fetchOfficerWiseCollections({
+    //   officerId: user._id,
+    //   period: "daily",
+    // });
         
     //    setTodayStats({
     //   todayAmount: todayData.totalAmount,

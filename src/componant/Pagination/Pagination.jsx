@@ -1,5 +1,4 @@
 import React, { useCallback, useState } from "react";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 function PaginationNav() {
   const [pageIndex, setPageIndex] = useState(0);

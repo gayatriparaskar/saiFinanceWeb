@@ -20,13 +20,9 @@ const Table = ({
 }) => {
 //   const history = useRouter();
 //   const { page } = history.query;
-  const totalPages = Math.ceil(total / pageSize);
+ 
   const tableInstance = useTable({ columns, data }, useExpanded);
   // console.log("tablr")
-
-  const tbleFun = () => {
-    // console.log("abc")
-  }
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     tableInstance;

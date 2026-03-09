@@ -22,7 +22,6 @@ import {
   AlertTitle,
   AlertDescription,
   useToast,
-  Select,
   Input,
   InputGroup,
   InputLeftElement,
@@ -42,13 +41,13 @@ import axios from '../../../axios';
 import dayjs from 'dayjs';
 
 const MotionBox = motion(Box);
-const MotionCard = motion(Card);
+
 
 const WeeklyReport = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedWeek, setSelectedWeek] = useState(dayjs().format('YYYY-[W]WW'));
+  const [selectedWeek] = useState(dayjs().format('YYYY-[W]WW'));
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredReports, setFilteredReports] = useState([]);
   const [isMonthlyView, setIsMonthlyView] = useState(false);

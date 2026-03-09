@@ -23,13 +23,11 @@ import {
   Alert,
   AlertIcon,
   useToast,
-  Flex,
   Stat,
   StatLabel,
   StatNumber,
   StatHelpText,
   StatArrow,
-  Divider,
   Input,
   InputGroup,
   InputLeftElement,
@@ -40,9 +38,6 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  MenuDivider,
-  IconButton,
-  useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -57,7 +52,7 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper
 } from '@chakra-ui/react';
-import { FiCalendar, FiDollarSign, FiUsers, FiTrendingUp, FiSearch, FiDownload, FiUserPlus, FiCreditCard, FiChevronDown } from 'react-icons/fi';
+import { FiCalendar, FiDownload, FiUserPlus, FiCreditCard, FiChevronDown } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import axios from '../../../axios';
@@ -72,9 +67,7 @@ const DailyReport = () => {
   
   // Debug: Log the selected date
   useEffect(() => {
-    console.log('📅 Selected Date:', selectedDate);
-    console.log('📅 Today:', dayjs().format('YYYY-MM-DD'));
-    console.log('📅 Is Today:', selectedDate === dayjs().format('YYYY-MM-DD'));
+
   }, [selectedDate]);
   const [filteredData, setFilteredData] = useState([]);
   const [officers, setOfficers] = useState([]);
@@ -108,10 +101,10 @@ const DailyReport = () => {
     setIsAssignModalOpen(true);
   };
 
-  const handlePaymentProcess = (processType) => {
-    setPaymentProcessType(processType);
-    setIsPaymentModalOpen(true);
-  };
+  // const handlePaymentProcess = (processType) => {
+  //   setPaymentProcessType(processType);
+  //   setIsPaymentModalOpen(true);
+  // };
 
   // Handle payment process update via officer API
   const handlePaymentProcessUpdate = async (processType) => {

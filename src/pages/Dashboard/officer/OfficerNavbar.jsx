@@ -30,7 +30,6 @@ import {
   FiMenu,
   FiHome,
   FiUsers,
-  FiCalendar,
   FiBarChart2,
   FiKey
 } from "react-icons/fi";

@@ -5,7 +5,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 
 import { IoMdLogOut } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
-import { FiGlobe, FiKey, FiMenu, FiHome, FiCalendar, FiBarChart2, FiUser } from "react-icons/fi";
+import { FiGlobe, FiKey, FiMenu, FiHome,FiUser } from "react-icons/fi";
 import PasswordChangeModal from "../../../components/PasswordChangeModal";
 import { changeUserPassword } from "../../../services/userService";
 

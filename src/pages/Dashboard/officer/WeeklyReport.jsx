@@ -23,20 +23,18 @@ import {
   Alert,
   AlertIcon,
   useToast,
-  Flex,
   Stat,
   StatLabel,
   StatNumber,
   StatHelpText,
   StatArrow,
-  Divider,
   Select,
   Grid,
   GridItem,
   Progress,
   ProgressLabel
 } from '@chakra-ui/react';
-import { FiBarChart2, FiDollarSign, FiUsers, FiTrendingUp, FiDownload, FiCalendar } from 'react-icons/fi';
+import { FiBarChart2, FiDownload } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
