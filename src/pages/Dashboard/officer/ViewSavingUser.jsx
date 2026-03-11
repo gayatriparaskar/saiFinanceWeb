@@ -23,7 +23,6 @@ import {
   Center,
   Alert,
   AlertIcon,
-  useToast
 } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import axios from '../../../axios';
@@ -41,7 +40,7 @@ const ViewSavingUser = () => {
 
   useEffect(() => {
     fetchUserData();
-  }, [id]);
+  });
 
   const fetchUserData = async () => {
     try {

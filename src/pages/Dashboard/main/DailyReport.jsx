@@ -56,11 +56,11 @@ const DailyReport = () => {
 
   useEffect(() => {
     fetchDailyReports();
-  }, [selectedDate]);
+  }, [selectedDate , fetchDailyReports]);
 
   useEffect(() => {
     filterReports();
-  }, [reports, searchTerm]);
+  });
 
   // Show payment process info toast when component mounts
   useEffect(() => {
@@ -86,7 +86,7 @@ const DailyReport = () => {
     const timer = setTimeout(showPaymentInfoToast, 100);
     
     return () => clearTimeout(timer);
-  }, []); // Remove toast dependency to avoid re-running
+  }); // Remove toast dependency to avoid re-running
 
   const fetchDailyReports = async () => {
     try {

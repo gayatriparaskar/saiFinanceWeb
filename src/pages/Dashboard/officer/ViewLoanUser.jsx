@@ -41,7 +41,7 @@ const ViewLoanUser = () => {
   useEffect(() => {
     fetchUserData();
     fetchDailyData();
-  }, [id,fetchUserData]);
+  });
 
   const fetchUserData = async () => {
     try {

@@ -68,7 +68,7 @@ const DailyReport = () => {
   // Debug: Log the selected date
   useEffect(() => {
 
-  }, [selectedDate]);
+  });
   const [filteredData, setFilteredData] = useState([]);
   const [setOfficers] = useState([]);
   const [selectedUser, setSelectedUser] = useState('');
@@ -85,7 +85,7 @@ const DailyReport = () => {
       fetchDailyReport();
       fetchOfficers();
     }
-  },[user, selectedDate ,fetchDailyReport]);
+  });
 
   const fetchOfficers = async () => {
     try {

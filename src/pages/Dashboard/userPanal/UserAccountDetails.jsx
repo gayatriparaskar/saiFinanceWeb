@@ -151,8 +151,7 @@ const savingColumns = React.useMemo(
       accessor: 'collected_officer_name',
       Cell: ({ value }) => value || '-'
     }
-  ],
-  []
+  ]
 );
 {/* <Table
   data={savingData || []}  // Make sure to use savingData here
