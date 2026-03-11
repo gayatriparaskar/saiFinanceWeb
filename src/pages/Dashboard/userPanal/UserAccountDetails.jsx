@@ -151,13 +151,10 @@ const savingColumns = React.useMemo(
       accessor: 'collected_officer_name',
       Cell: ({ value }) => value || '-'
     }
-  ]
+  ],
+  []
 );
-{/* <Table
-  data={savingData || []}  // Make sure to use savingData here
-  columns={savingColumns}  // Make sure savingColumns is properly defined
-  emptyMessage="No saving transactions found"
-/> */}
+
 // Add this useEffect to fetch saving account data
 // Add this useEffect hook with your other hooks
 useEffect(() => {

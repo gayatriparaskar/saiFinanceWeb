@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Text,
@@ -54,13 +54,35 @@ const DailyReport = () => {
   const bgColor = useColorModeValue('gray.50', 'gray.900');
   const cardBg = useColorModeValue('white', 'gray.800');
 
+  const fetchDailyReports = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await axios.get(`/reports/daily?date=${selectedDate}`);
+      setReports(response.data.reports || []);
+    } catch (err) {
+      console.error('Error fetching daily reports:', err);
+      setError('Failed to fetch daily reports');
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch daily reports',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDate, toast]);
+
   useEffect(() => {
     fetchDailyReports();
-  }, [selectedDate , fetchDailyReports]);
+  }, [fetchDailyReports]);
 
   useEffect(() => {
     filterReports();
-  });
+  }, [filterReports]);
 
   // Show payment process info toast when component mounts
   useEffect(() => {
@@ -86,31 +108,9 @@ const DailyReport = () => {
     const timer = setTimeout(showPaymentInfoToast, 100);
     
     return () => clearTimeout(timer);
-  }); // Remove toast dependency to avoid re-running
+  }, []); // Remove toast dependency to avoid re-running
 
-  const fetchDailyReports = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await axios.get(`/reports/daily?date=${selectedDate}`);
-      setReports(response.data.reports || []);
-    } catch (err) {
-      console.error('Error fetching daily reports:', err);
-      setError('Failed to fetch daily reports');
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch daily reports',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterReports = () => {
+  const filterReports = useCallback(() => {
     if (!searchTerm) {
       setFilteredReports(reports);
       return;
@@ -122,7 +122,7 @@ const DailyReport = () => {
       report.transaction_type?.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredReports(filtered);
-  };
+  }, [reports, searchTerm]);
 
   const calculateTotals = () => {
     const totals = {

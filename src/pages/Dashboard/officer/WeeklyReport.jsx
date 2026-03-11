@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from '../../../contexts/AuthContext';
 import {
   Box,
@@ -62,9 +62,9 @@ const WeeklyReport = () => {
     if (user) {
       fetchWeeklyReport();
     }
-  }, [user, selectedWeek]);
+  }, [user, selectedWeek, fetchWeeklyReport]);
 
-  const fetchWeeklyReport = async () => {
+  const fetchWeeklyReport = useCallback(async () => {
     // Calculate week dates outside try block so they're available in catch block
     // Parse week format like "2025-W37" or "2025-W01"
     const weekMatch = selectedWeek.match(/(\d{4})-W(\d{2})/);
@@ -493,7 +493,7 @@ const WeeklyReport = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedWeek, user, toast]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
