@@ -777,9 +777,9 @@ console.log(user._id,"userrr");
     endDate = new Date(user.end_date);
   } else if (user.created_on) {
     const createdDate = new Date(user.created_on);
-    endDate = new Date(createdDate.getTime() + 120 * 24 * 60 * 60 * 1000);
+    endDate = new Date(createdDate.getTime() + 365 * 24 * 60 * 60 * 1000);
   } else {
-    endDate = new Date(currentDate.getTime() + 120 * 24 * 60 * 60 * 1000);
+    endDate = new Date(currentDate.getTime() + 365 * 24 * 60 * 60 * 1000);
   }
 
   const timeDiff = endDate - currentDate;
@@ -1254,7 +1254,7 @@ console.log(user._id,"userrr");
                                 <Box 
                                   h="100%" 
                                   bg={assignedUser.remaining_emi_days > 30 ? "green.400" : assignedUser.remaining_emi_days > 10 ? "yellow.400" : "red.400"}
-                                  w={`${Math.max(0, Math.min(100, ((120 - assignedUser.remaining_emi_days) / 120) * 100))}%`}
+                                  w={`${Math.max(0, Math.min(100, ((365 - assignedUser.remaining_emi_days) / 365) * 100))}%`}
                                   transition="width 0.3s ease"
                                 />
                               </Box>

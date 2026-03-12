@@ -254,7 +254,7 @@ useEffect(() => {
     const startDate = dayjs(userdata?.active_loan_id?.created_on).format("D MMM, YYYY");
     const endDate = userdata?.active_loan_id?.end_date 
       ? dayjs(userdata?.active_loan_id?.end_date).format("D MMM, YYYY")
-      : dayjs(userdata?.active_loan_id?.created_on).add(120, 'day').format("D MMM, YYYY");
+      : dayjs(userdata?.active_loan_id?.created_on).add(365, 'day').format("D MMM, YYYY");
     const loan = userdata?.active_loan_id?.loan_amount || 0;
     const due = userdata?.active_loan_id?.total_due_amount || 0;
     const penalty = userdata?.active_loan_id?.total_penalty_amount || 0;
@@ -429,7 +429,7 @@ useEffect(() => {
                   <span className="ml-2 lg:ml-4">
                     {userdata?.active_loan_id?.end_date 
                       ? dayjs(userdata?.active_loan_id?.end_date).format("D MMM, YYYY")
-                      : dayjs(userdata?.active_loan_id?.created_on).add(120, 'day').format("D MMM, YYYY")
+                      : dayjs(userdata?.active_loan_id?.created_on).add(365, 'day').format("D MMM, YYYY")
                     }
                   </span>
                 </h2>
