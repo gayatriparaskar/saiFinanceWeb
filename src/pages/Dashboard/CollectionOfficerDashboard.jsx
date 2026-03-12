@@ -261,9 +261,9 @@ function CollectionOfficerDashboard() {
       endDate = new Date(user.end_date);
     } else if (user.created_on) {
       const createdDate = new Date(user.created_on);
-      endDate = new Date(createdDate.getTime() + 120 * 24 * 60 * 60 * 1000);
+      endDate = new Date(createdDate.getTime() + 365 * 24 * 60 * 60 * 1000);
     } else {
-      endDate = new Date(currentDate.getTime() + 120 * 24 * 60 * 60 * 1000);
+      endDate = new Date(currentDate.getTime() + 365 * 24 * 60 * 60 * 1000);
     }
 
     const timeDiff = endDate - currentDate;

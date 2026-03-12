@@ -220,7 +220,7 @@ const HomePage = () => {
   }, [profile?._id]);
 
   // Function to calculate remaining days from created_on date
-  const calculateRemainingDays = useCallback((created_on, totalDays = 120) => {
+  const calculateRemainingDays = useCallback((created_on, totalDays = 365) => {
     if (!created_on) return 0;
     
     const createdDate = new Date(created_on);
@@ -1177,7 +1177,7 @@ const HomePage = () => {
                         },
                         {
                           key: "remaining_emi_days",
-                          value: `${calculateRemainingDays(profile?.saving_account_id?.created_on, 120)} days`,
+                          value: `${calculateRemainingDays(profile?.saving_account_id?.created_on, 365)} days`,
                           icon: "📅",
                         },
                       ]
@@ -1192,7 +1192,7 @@ const HomePage = () => {
                         },
                         {
                           key: "remaining_emi_days",
-                          value: `${calculateRemainingDays(profile?.active_loan_id?.created_on, 120)} days`,
+                          value: `${calculateRemainingDays(profile?.active_loan_id?.created_on, 365)} days`,
                           icon: "📅",
                         },
                       ]),
@@ -1303,8 +1303,8 @@ const HomePage = () => {
                     </Text>
                     <Text color="white" fontSize="2xl" fontWeight="bold">
                       {isSavingAccount 
-                        ? calculateRemainingDays(profile?.saving_account_id?.created_on, 120)
-                        : calculateRemainingDays(profile?.active_loan_id?.created_on, 120)
+                        ? calculateRemainingDays(profile?.saving_account_id?.created_on,365)
+                        : calculateRemainingDays(profile?.active_loan_id?.created_on, 365)
                       }
                     </Text>
                     <Text color="white" fontSize="xs" opacity="0.8">
